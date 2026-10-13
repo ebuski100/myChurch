@@ -1,29 +1,17 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowIcon } from "./_components/site-chrome";
+
 const navigation = [
   { label: "Home", href: "#home" },
+  { label: "About", href: "/about" },
+  { label: "Events", href: "/events" },
+  { label: "Ministries", href: "/ministries" },
   { label: "Our Ministry", href: "#ministry" },
   { label: "Services", href: "#services" },
-  { label: "Sermons", href: "#sermons" },
+  { label: "Sermons", href: "/sermons" },
   { label: "Visit", href: "#visit" },
 ];
-
-function ArrowIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 20 20"
-      fill="none"
-      className="size-4"
-    >
-      <path
-        d="M4 10h12m-5-5 5 5-5 5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function Brand({ light = false }: { light?: boolean }) {
   return (
@@ -107,7 +95,7 @@ export default function Home() {
           <Brand light />
           <nav
             aria-label="Main navigation"
-            className="hidden items-center gap-8 md:flex"
+            className="hidden items-center gap-8 lg:flex"
           >
             {navigation.map((item) => (
               <a
@@ -128,7 +116,7 @@ export default function Home() {
         </div>
         <nav
           aria-label="Mobile navigation"
-          className="flex gap-5 overflow-x-auto px-5 pb-3 md:hidden"
+          className="flex gap-5 overflow-x-auto px-5 pb-3 lg:hidden"
         >
           {navigation.map((item) => (
             <a
@@ -174,12 +162,12 @@ export default function Home() {
                 God&apos;s presence.
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="#sermons"
+                <Link
+                  href="/sermons"
                   className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#D9B66D] px-6 text-sm font-semibold text-[#101B33] transition-colors hover:bg-[#E8CC8B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                 >
                   Listen to Sermons <ArrowIcon />
-                </a>
+                </Link>
                 <a
                   href="#visit"
                   className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/25 px-6 text-sm font-semibold text-white transition-colors hover:border-white/60 hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E6C77D]"
@@ -501,4 +489,3 @@ export default function Home() {
     </>
   );
 }
-import type { ReactNode } from "react";
