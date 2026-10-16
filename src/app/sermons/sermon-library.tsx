@@ -7,33 +7,23 @@ import { formatDuration } from "@/lib/sermons";
 function AudioPlayer({ sermon }: { sermon: Sermon }) {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
-  if (!sermon.audioUrl) {
-    return (
-      <div className="mt-5 rounded-xl border border-[#E4E7EC] bg-[#F8F9FB] px-4 py-3">
-        <p className="text-sm font-medium text-[#344054]">Audio not available yet</p>
-        <p className="mt-1 text-xs leading-5 text-[#667085]">
-          This sample listing has no recording attached.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="mt-5">
       <audio
         className="w-full accent-[#9A772E]"
         controls
-        preload="metadata"
+        controlsList={sermon.downloadAllowed ? undefined : "nodownload"}
+        preload="none"
         aria-label={`Play sermon: ${sermon.title}`}
         onLoadStart={() => setStatus("loading")}
         onCanPlay={() => setStatus("ready")}
         onError={() => setStatus("error")}
       >
-        <source src={sermon.audioUrl} />
+        <source src={`/api/sermons/${encodeURIComponent(sermon.id)}/audio`} />
         Your browser does not support audio playback.
       </audio>
       <p aria-live="polite" className="mt-2 min-h-5 text-xs text-[#667085]">
-        {status === "loading" && "Loading audio…"}
+        {status === "loading" && "Audio loads when you press play"}
         {status === "ready" && "Audio ready to play"}
         {status === "error" && "This audio could not be played. Please try again later."}
       </p>
@@ -50,9 +40,8 @@ function SermonCard({ sermon }: { sermon: Sermon }) {
     <article className="rounded-2xl border border-[#E4E7EC] bg-white p-5 shadow-[0_8px_30px_rgba(16,27,51,0.04)] sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="rounded-full bg-[#F8F4E9] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#785B1F]">
-          {sermon.isSample ? "Sample listing" : sermon.category ?? "Sermon"}
+          {sermon.category ?? "Sermon"}
         </span>
-        {sermon.isSample && <span className="text-xs text-[#667085]">Placeholder content</span>}
       </div>
       <h2 className="mt-5 text-xl font-semibold tracking-tight text-[#101B33] sm:text-2xl">
         {sermon.title}
@@ -61,10 +50,9 @@ function SermonCard({ sermon }: { sermon: Sermon }) {
         {details.length > 0 ? details.join(" · ") : "Preacher, date, and duration not provided"}
       </p>
       <AudioPlayer sermon={sermon} />
-      {sermon.audioUrl && sermon.downloadFilename && (
+      {sermon.downloadAllowed && (
         <a
-          href={sermon.audioUrl}
-          download={sermon.downloadFilename}
+          href={`/api/sermons/${encodeURIComponent(sermon.id)}/audio?download=1`}
           className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] transition-colors hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9A772E]"
         >
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
@@ -108,7 +96,14 @@ export function SermonLibrary({ sermons }: { sermons: Sermon[] }) {
       </div>
 
       <div aria-live="polite" className="mt-8">
-        {filteredSermons.length > 0 ? (
+        {sermons.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#C9CDD5] bg-white px-6 py-12 text-center">
+            <h2 className="text-lg font-semibold text-[#101B33]">No published sermons are available yet</h2>
+            <p className="mt-2 text-sm leading-6 text-[#667085]">
+              Please check back when the ministry has published its first sermon.
+            </p>
+          </div>
+        ) : filteredSermons.length > 0 ? (
           <>
             <p className="mb-4 text-sm text-[#667085]">
               {normalizedQuery

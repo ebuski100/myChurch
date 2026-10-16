@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { io } from "next/cache";
 import { SiteFooter, SiteHeader } from "../_components/site-chrome";
-import { sermons } from "@/lib/sermons";
+import { getPublishedAudioSermons } from "@/lib/sermon-data";
 import { SermonLibrary } from "./sermon-library";
 
 export const metadata: Metadata = {
@@ -8,6 +10,43 @@ export const metadata: Metadata = {
   description:
     "Explore the sermon library from VictoryCity Revival Ministry. Audio recordings will be shared here when they are available.",
 };
+
+async function SermonResults() {
+  await io();
+  const result = await getPublishedAudioSermons();
+
+  if (result.kind === "error") {
+    return (
+      <div className="rounded-2xl border border-[#E4E7EC] bg-white px-6 py-10 text-center">
+        <h3 className="text-lg font-semibold text-[#101B33]">
+          Sermon library temporarily unavailable
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-[#667085]">
+          We couldn&apos;t load the published sermons. Please try again later.
+        </p>
+      </div>
+    );
+  }
+
+  return <SermonLibrary sermons={result.sermons} />;
+}
+
+function SermonResultsFallback() {
+  return (
+    <div aria-live="polite" aria-busy="true" className="space-y-4">
+      <p className="text-sm text-[#667085]">Loading published sermons…</p>
+      <div className="grid gap-5 md:grid-cols-2">
+        {[0, 1].map((item) => (
+          <div
+            key={item}
+            aria-hidden="true"
+            className="h-48 animate-pulse rounded-2xl border border-[#E4E7EC] bg-white"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function SermonsPage() {
   return (
@@ -49,11 +88,13 @@ export default function SermonsPage() {
                 </h2>
               </div>
               <p className="max-w-xl text-sm leading-6 text-[#667085]">
-                Listings marked as samples are layout placeholders, not actual
-                sermons or recordings.
+                Browse published sermon details. Recordings will play here when
+                authorized audio access is available.
               </p>
             </div>
-            <SermonLibrary sermons={sermons} />
+            <Suspense fallback={<SermonResultsFallback />}>
+              <SermonResults />
+            </Suspense>
           </div>
         </section>
       </main>
