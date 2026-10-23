@@ -1,6 +1,6 @@
 begin;
 
-select plan(23);
+select plan(25);
 
 -- Fixed fixtures keep this suite deterministic. They are rolled back at the end.
 insert into auth.users (id) values
@@ -15,7 +15,7 @@ insert into public.resources
 values
   ('20000000-0000-0000-0000-000000000001', 'audio', 'rls-published', 'Published fixture', 'published', now() - interval '1 day'),
   ('20000000-0000-0000-0000-000000000002', 'audio', 'rls-draft', 'Draft fixture', 'draft', null),
-  ('20000000-0000-0000-0000-000000000003', 'audio', 'rls-scheduled', 'Scheduled fixture', 'published', now() + interval '1 day');
+  ('20000000-0000-0000-0000-000000000003', 'audio', 'rls-scheduled', 'Scheduled fixture', 'scheduled', now() - interval '1 day');
 
 insert into public.audio_details (resource_id, duration_seconds) values
   ('20000000-0000-0000-0000-000000000001', 60),
@@ -48,12 +48,12 @@ values
 
 -- Anonymous callers can read published content, but not drafts or scheduled rows.
 set local role anon;
-select is((select count(*)::int from public.resources), 1, 'anon sees only currently published resources');
-select is((select count(*)::int from public.audio_details), 1, 'anon sees details only for published resources');
-select is((select count(*)::int from public.events), 1, 'anon sees only published events');
-select is((select count(*)::int from public.ministries), 1, 'anon sees only published ministries');
-select is((select count(*)::int from public.resource_assets), 1, 'anon sees only public metadata links on published resources');
-select is((select count(*)::int from public.assets), 1, 'anon sees metadata only for assets attached to published content');
+select is((select count(*)::int from public.resources where id between '20000000-0000-0000-0000-000000000001'::uuid and '20000000-0000-0000-0000-000000000003'::uuid), 1, 'anon sees only currently published resource fixtures');
+select is((select count(*)::int from public.audio_details where resource_id between '20000000-0000-0000-0000-000000000001'::uuid and '20000000-0000-0000-0000-000000000003'::uuid), 1, 'anon sees details only for published resource fixtures');
+select is((select count(*)::int from public.events where id between '40000000-0000-0000-0000-000000000001'::uuid and '40000000-0000-0000-0000-000000000002'::uuid), 1, 'anon sees only published event fixtures');
+select is((select count(*)::int from public.ministries where id between '50000000-0000-0000-0000-000000000001'::uuid and '50000000-0000-0000-0000-000000000002'::uuid), 1, 'anon sees only published ministry fixtures');
+select is((select count(*)::int from public.resource_assets where resource_id between '20000000-0000-0000-0000-000000000001'::uuid and '20000000-0000-0000-0000-000000000003'::uuid), 1, 'anon sees only public metadata links on published resource fixtures');
+select is((select count(*)::int from public.assets where id between '30000000-0000-0000-0000-000000000001'::uuid and '30000000-0000-0000-0000-000000000003'::uuid), 1, 'anon sees metadata only for assets attached to published content fixtures');
 select ok(has_column_privilege('anon', 'public.assets', 'id', 'select'), 'anon can select the asset id');
 select ok(has_column_privilege('anon', 'public.assets', 'alt_text', 'select'), 'anon can select public alt text');
 select ok(not has_column_privilege('anon', 'public.assets', 'object_path', 'select'), 'anon cannot select storage object paths');
@@ -64,8 +64,8 @@ reset role;
 -- A signed-in non-admin has the same public visibility and cannot mutate content.
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 set local role authenticated;
-select is((select count(*)::int from public.resources), 1, 'authenticated non-admin sees only published resources');
-select is((select count(*)::int from public.resource_assets), 1, 'authenticated non-admin sees only public resource-asset links');
+select is((select count(*)::int from public.resources where id between '20000000-0000-0000-0000-000000000001'::uuid and '20000000-0000-0000-0000-000000000003'::uuid), 1, 'authenticated non-admin sees only published resource fixtures');
+select is((select count(*)::int from public.resource_assets where resource_id between '20000000-0000-0000-0000-000000000001'::uuid and '20000000-0000-0000-0000-000000000003'::uuid), 1, 'authenticated non-admin sees only public resource-asset fixture links');
 select is((select count(*)::int from public.admin_users), 0, 'non-admin cannot enumerate administrators');
 select throws_ok(
   $$insert into public.resources (resource_type, title) values ('audio', 'RLS unauthorized fixture')$$,
@@ -82,7 +82,7 @@ reset role;
 -- The allow-listed admin sees the admin marker and can perform granted writes.
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000002', true);
 set local role authenticated;
-select is((select count(*)::int from public.admin_users), 1, 'admin can read their own allow-list row');
+select is((select count(*)::int from public.admin_users where user_id = '10000000-0000-0000-0000-000000000002'), 1, 'admin can read their own allow-list row');
 insert into public.resources (resource_type, title) values ('audio', 'RLS authorized fixture');
 select is((select count(*)::int from public.resources where title = 'RLS authorized fixture'), 1, 'admin can insert resources');
 insert into public.events (title, starts_at) values ('RLS authorized event', now());
@@ -92,6 +92,18 @@ select is((select count(*)::int from public.ministries where name = 'RLS authori
 insert into public.assets (id, media_type, storage_bucket, object_path) values
   ('30000000-0000-0000-0000-000000000004', 'audio', 'private-files', 'admin/authorized.mp3');
 select is((select count(*)::int from public.assets where id = '30000000-0000-0000-0000-000000000004'), 1, 'admin can insert asset metadata');
+with changed as (
+  update public.resources set publication_status = 'published', published_at = now()
+  where id = '20000000-0000-0000-0000-000000000003'
+    and publication_status = 'scheduled' and published_at <= now()
+  returning id
+) select is((select count(*)::int from changed), 1, 'a due scheduled sermon can be claimed once for publication');
+with changed as (
+  update public.resources set publication_status = 'published', published_at = now()
+  where id = '20000000-0000-0000-0000-000000000003'
+    and publication_status = 'scheduled' and published_at <= now()
+  returning id
+) select is((select count(*)::int from changed), 0, 'a repeated or concurrent stale scheduler claim cannot publish the same sermon again');
 reset role;
 select ok(not has_table_privilege('authenticated', 'public.admin_users', 'insert'), 'authenticated users cannot grant administrator access through the API');
 

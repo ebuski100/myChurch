@@ -1,6 +1,8 @@
 begin;
 select no_plan();
 
+select is((select public from storage.buckets where id = 'event-posters'), false, 'event poster bucket is private');
+
 -- These fixed Auth identities and all content fixtures are rolled back below.
 insert into auth.users (id) values
   ('11000000-0000-0000-0000-000000000001'),
@@ -39,7 +41,7 @@ select ok((select relrowsecurity from pg_class where oid = to_regclass('public.m
 insert into public.resources (id, resource_type, slug, title, publication_status, published_at) values
   ('21000000-0000-0000-0000-000000000001', 'audio', 'expanded-audio-public', 'Audio public', 'published', now() - interval '1 day'),
   ('21000000-0000-0000-0000-000000000002', 'audio', 'expanded-audio-draft', 'Audio draft', 'draft', null),
-  ('21000000-0000-0000-0000-000000000003', 'audio', 'expanded-audio-scheduled', 'Audio scheduled', 'published', now() + interval '1 day'),
+  ('21000000-0000-0000-0000-000000000003', 'audio', 'expanded-audio-scheduled', 'Audio scheduled', 'scheduled', now() + interval '1 day'),
   ('21000000-0000-0000-0000-000000000004', 'video', 'expanded-video-public', 'Video public', 'published', now() - interval '1 day'),
   ('21000000-0000-0000-0000-000000000005', 'video', 'expanded-video-draft', 'Video draft', 'draft', null),
   ('21000000-0000-0000-0000-000000000006', 'book', 'expanded-book-public', 'Book public', 'published', now() - interval '1 day'),
@@ -53,7 +55,8 @@ insert into public.resources (id, resource_type, slug, title, publication_status
   ('21000000-0000-0000-0000-000000000014', 'audio', 'expanded-write-audio-public', 'Write audio public parent', 'published', now() - interval '1 day'),
   ('21000000-0000-0000-0000-000000000015', 'video', 'expanded-write-video-public', 'Write video public parent', 'published', now() - interval '1 day'),
   ('21000000-0000-0000-0000-000000000016', 'book', 'expanded-write-book-public', 'Write book public parent', 'published', now() - interval '1 day'),
-  ('21000000-0000-0000-0000-000000000017', 'document', 'expanded-write-document-public', 'Write document public parent', 'published', now() - interval '1 day');
+  ('21000000-0000-0000-0000-000000000017', 'document', 'expanded-write-document-public', 'Write document public parent', 'published', now() - interval '1 day'),
+  ('21000000-0000-0000-0000-000000000018', 'audio', 'expanded-audio-archived', 'Audio archived', 'archived', null);
 
 insert into public.audio_details (resource_id, duration_seconds) values
   ('21000000-0000-0000-0000-000000000001', 61),
@@ -86,7 +89,8 @@ values
   ('31000000-0000-0000-0000-000000000008', 'image', 'Published ministry image', 'private-bucket', 'fixture/private-08', 'private-08.bin', 'image/png', 108, repeat('1', 64)),
   ('31000000-0000-0000-0000-000000000009', 'image', 'Draft ministry image', 'private-bucket', 'fixture/private-09', 'private-09.bin', 'image/png', 109, repeat('2', 64)),
   ('31000000-0000-0000-0000-000000000010', 'image', 'Scheduled ministry image', 'private-bucket', 'fixture/private-10', 'private-10.bin', 'image/png', 110, repeat('3', 64)),
-  ('31000000-0000-0000-0000-000000000011', 'audio', 'Unlinked private asset', 'private-bucket', 'fixture/private-11', 'private-11.bin', 'audio/mpeg', 111, repeat('4', 64));
+  ('31000000-0000-0000-0000-000000000011', 'audio', 'Unlinked private asset', 'private-bucket', 'fixture/private-11', 'private-11.bin', 'audio/mpeg', 111, repeat('4', 64)),
+  ('31000000-0000-0000-0000-000000000012', 'image', 'Staged event poster', 'event-posters', 'pending/11000000-0000-0000-0000-000000000002/31000000-0000-0000-0000-000000000012.png', 'poster.png', 'image/png', 112, repeat('5', 64));
 
 insert into public.resource_assets
   (resource_id, asset_id, purpose, is_public_metadata, download_allowed, sort_order)
@@ -99,7 +103,8 @@ values
 insert into public.events (id, slug, title, starts_at, poster_asset_id, publication_status, published_at) values
   ('41000000-0000-0000-0000-000000000001', 'expanded-event-public', 'Event public', now() + interval '2 days', '31000000-0000-0000-0000-000000000005', 'published', now() - interval '1 day'),
   ('41000000-0000-0000-0000-000000000002', 'expanded-event-draft', 'Event draft', now() + interval '3 days', '31000000-0000-0000-0000-000000000006', 'draft', null),
-  ('41000000-0000-0000-0000-000000000003', 'expanded-event-scheduled', 'Event scheduled', now() + interval '4 days', '31000000-0000-0000-0000-000000000007', 'published', now() + interval '1 day');
+  ('41000000-0000-0000-0000-000000000003', 'expanded-event-scheduled', 'Event scheduled', now() + interval '4 days', '31000000-0000-0000-0000-000000000007', 'published', now() + interval '1 day'),
+  ('41000000-0000-0000-0000-000000000004', 'expanded-event-cancelled', 'Event cancelled', now() + interval '5 days', null, 'cancelled', null);
 insert into public.ministries (id, slug, name, image_asset_id, publication_status, published_at) values
   ('51000000-0000-0000-0000-000000000001', 'expanded-ministry-public', 'Ministry public', '31000000-0000-0000-0000-000000000008', 'published', now() - interval '1 day'),
   ('51000000-0000-0000-0000-000000000002', 'expanded-ministry-draft', 'Ministry draft', '31000000-0000-0000-0000-000000000009', 'draft', null),
@@ -107,17 +112,25 @@ insert into public.ministries (id, slug, name, image_asset_id, publication_statu
 
 -- Anonymous SQL role: exact public IDs, all detail types, and related assets.
 set local role anon;
-select is((select array_agg(code order by code) from public.resource_types), ARRAY['audio','book','document','poster','video']::text[], 'anon reads the expected resource type catalogue');
-select is((select array_agg(id::text order by id::text) from public.resources where id::text like '21000000-0000-0000-0000-0000000000%'), ARRAY['21000000-0000-0000-0000-000000000001','21000000-0000-0000-0000-000000000004','21000000-0000-0000-0000-000000000006','21000000-0000-0000-0000-000000000008','21000000-0000-0000-0000-000000000014','21000000-0000-0000-0000-000000000015','21000000-0000-0000-0000-000000000016','21000000-0000-0000-0000-000000000017']::text[], 'anon sees only published resource IDs, excluding draft and scheduled parents');
-select is((select array_agg(resource_id::text order by resource_id::text) from public.audio_details), ARRAY['21000000-0000-0000-0000-000000000001']::text[], 'audio details are visible only through a published parent');
-select is((select array_agg(resource_id::text order by resource_id::text) from public.video_details), ARRAY['21000000-0000-0000-0000-000000000004']::text[], 'video details are visible only through a published parent');
-select is((select array_agg(resource_id::text order by resource_id::text) from public.book_details), ARRAY['21000000-0000-0000-0000-000000000006']::text[], 'book details are visible only through a published parent');
-select is((select array_agg(resource_id::text order by resource_id::text) from public.document_details), ARRAY['21000000-0000-0000-0000-000000000008']::text[], 'document details are visible only through a published parent');
-select is((select array_agg(resource_id::text order by resource_id::text) from public.sermon_details), ARRAY['21000000-0000-0000-0000-000000000001','21000000-0000-0000-0000-000000000004']::text[], 'sermon details are visible only through published audio or video parents');
-select is((select array_agg(id::text order by id::text) from public.events), ARRAY['41000000-0000-0000-0000-000000000001']::text[], 'anon sees only the published event');
-select is((select array_agg(id::text order by id::text) from public.ministries), ARRAY['51000000-0000-0000-0000-000000000001']::text[], 'anon sees only the published ministry');
-select is((select array_agg(asset_id::text order by asset_id::text) from public.resource_assets), ARRAY['31000000-0000-0000-0000-000000000001']::text[], 'anon sees only the published resource cover link, not download or unpublished links');
-select is((select array_agg(id::text order by id::text) from public.assets), ARRAY['31000000-0000-0000-0000-000000000001','31000000-0000-0000-0000-000000000005','31000000-0000-0000-0000-000000000008']::text[], 'anon sees assets only through the published resource cover, event poster, and ministry image');
+select is((select array_agg(code order by code) from public.resource_types where code = any (ARRAY['audio','book','document','poster','video']::text[])), ARRAY['audio','book','document','poster','video']::text[], 'anon reads the expected resource type catalogue entries');
+select is((select array_agg(id::text order by id::text) from public.resources where id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000001','21000000-0000-0000-0000-000000000004','21000000-0000-0000-0000-000000000006','21000000-0000-0000-0000-000000000008','21000000-0000-0000-0000-000000000014','21000000-0000-0000-0000-000000000015','21000000-0000-0000-0000-000000000016','21000000-0000-0000-0000-000000000017']::text[], 'anon sees only published resource fixtures, excluding draft and scheduled parents');
+select is((select count(*)::int from public.resources where id = '21000000-0000-0000-0000-000000000018'), 0, 'anon cannot read archived sermons');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.audio_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000001']::text[], 'audio details are visible only through a published parent fixture');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.video_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000004']::text[], 'video details are visible only through a published parent fixture');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.book_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000006']::text[], 'book details are visible only through a published parent fixture');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.document_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000008']::text[], 'document details are visible only through a published parent fixture');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.sermon_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000001','21000000-0000-0000-0000-000000000004']::text[], 'sermon details are visible only through published audio or video parent fixtures');
+select is((select array_agg(id::text order by id::text) from public.events where id between '41000000-0000-0000-0000-000000000001'::uuid and '41000000-0000-0000-0000-000000000003'::uuid), ARRAY['41000000-0000-0000-0000-000000000001']::text[], 'anon sees only the published event fixtures');
+select is((select count(*)::int from public.events where id = '41000000-0000-0000-0000-000000000001' and publication_status = 'published' and published_at <= now()), 1, 'public detail lookup can read a due published event by ID');
+select is((select count(*)::int from public.events where id = '41000000-0000-0000-0000-000000000002'), 0, 'public detail lookup cannot read a draft event by ID');
+select is((select count(*)::int from public.events where id = '41000000-0000-0000-0000-000000000003' and published_at <= now()), 0, 'public detail lookup cannot read a future-published event by ID');
+select is((select count(*)::int from public.events where id = '41000000-0000-0000-0000-000000000004'), 0, 'public detail lookup cannot read a cancelled event by ID');
+select is((select count(*)::int from public.events where id = '41000000-0000-0000-0000-000000000099'), 0, 'public detail lookup returns no row for an unknown ID');
+select is((select count(*)::int from public.events where id = '41000000-0000-0000-0000-000000000004'), 0, 'anon cannot read cancelled events');
+select is((select array_agg(id::text order by id::text) from public.ministries where id between '51000000-0000-0000-0000-000000000001'::uuid and '51000000-0000-0000-0000-000000000003'::uuid), ARRAY['51000000-0000-0000-0000-000000000001']::text[], 'anon sees only the published ministry fixtures');
+select is((select array_agg(asset_id::text order by asset_id::text) from public.resource_assets where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['31000000-0000-0000-0000-000000000001']::text[], 'anon sees only the published resource cover link, not download or unpublished fixture links');
+select is((select array_agg(id::text order by id::text) from public.assets where id between '31000000-0000-0000-0000-000000000001'::uuid and '31000000-0000-0000-0000-000000000011'::uuid), ARRAY['31000000-0000-0000-0000-000000000001','31000000-0000-0000-0000-000000000005','31000000-0000-0000-0000-000000000008']::text[], 'anon sees assets only through the published resource cover, event poster, and ministry image fixtures');
+select is((select count(*)::int from public.assets where id = '31000000-0000-0000-0000-000000000012'), 0, 'anon cannot read an unassociated staged event poster');
 select is((select alt_text from public.assets where id = '31000000-0000-0000-0000-000000000001'), 'Public resource cover', 'anon can read intended safe asset metadata');
 select throws_ok($$select object_path from public.assets where id = '31000000-0000-0000-0000-000000000001'$$, '42501', 'permission denied for table assets', 'anon cannot select object_path');
 select throws_ok($$select original_filename from public.assets where id = '31000000-0000-0000-0000-000000000001'$$, '42501', 'permission denied for table assets', 'anon cannot select original_filename');
@@ -130,13 +143,16 @@ reset role;
 -- Non-admin identity is explicitly supplied through the same claim auth.uid() reads.
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
 set local role authenticated;
-select is((select array_agg(resource_id::text order by resource_id::text) from public.audio_details), ARRAY['21000000-0000-0000-0000-000000000001']::text[], 'authenticated non-admin cannot read draft or scheduled audio details');
-select is((select array_agg(resource_id::text order by resource_id::text) from public.video_details), ARRAY['21000000-0000-0000-0000-000000000004']::text[], 'authenticated non-admin cannot read unpublished video details');
-select is((select array_agg(resource_id::text order by resource_id::text) from public.book_details), ARRAY['21000000-0000-0000-0000-000000000006']::text[], 'authenticated non-admin cannot read unpublished book details');
-select is((select array_agg(resource_id::text order by resource_id::text) from public.document_details), ARRAY['21000000-0000-0000-0000-000000000008']::text[], 'authenticated non-admin cannot read unpublished document details');
-select is((select array_agg(id::text order by id::text) from public.events), ARRAY['41000000-0000-0000-0000-000000000001']::text[], 'authenticated non-admin sees only published events');
-select is((select array_agg(id::text order by id::text) from public.ministries), ARRAY['51000000-0000-0000-0000-000000000001']::text[], 'authenticated non-admin sees only published ministries');
-select is((select array_agg(id::text order by id::text) from public.assets), ARRAY['31000000-0000-0000-0000-000000000001','31000000-0000-0000-0000-000000000005','31000000-0000-0000-0000-000000000008']::text[], 'authenticated non-admin cannot see assets attached only to unpublished parents');
+select is((select count(*)::int from public.resources where id = '21000000-0000-0000-0000-000000000018'), 0, 'authenticated non-admin cannot read archived sermons');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.audio_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000001']::text[], 'authenticated non-admin cannot read draft or scheduled audio detail fixtures');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.video_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000004']::text[], 'authenticated non-admin cannot read unpublished video detail fixtures');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.book_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000006']::text[], 'authenticated non-admin cannot read unpublished book detail fixtures');
+select is((select array_agg(resource_id::text order by resource_id::text) from public.document_details where resource_id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid), ARRAY['21000000-0000-0000-0000-000000000008']::text[], 'authenticated non-admin cannot read unpublished document detail fixtures');
+select is((select array_agg(id::text order by id::text) from public.events where id between '41000000-0000-0000-0000-000000000001'::uuid and '41000000-0000-0000-0000-000000000003'::uuid), ARRAY['41000000-0000-0000-0000-000000000001']::text[], 'authenticated non-admin sees only published event fixtures');
+select is((select count(*)::int from public.events where id = '41000000-0000-0000-0000-000000000004'), 0, 'authenticated non-admin cannot read cancelled events');
+select is((select array_agg(id::text order by id::text) from public.ministries where id between '51000000-0000-0000-0000-000000000001'::uuid and '51000000-0000-0000-0000-000000000003'::uuid), ARRAY['51000000-0000-0000-0000-000000000001']::text[], 'authenticated non-admin sees only published ministry fixtures');
+select is((select array_agg(id::text order by id::text) from public.assets where id between '31000000-0000-0000-0000-000000000001'::uuid and '31000000-0000-0000-0000-000000000011'::uuid), ARRAY['31000000-0000-0000-0000-000000000001','31000000-0000-0000-0000-000000000005','31000000-0000-0000-0000-000000000008']::text[], 'authenticated non-admin cannot see assets attached only to unpublished parent fixtures');
+select is((select count(*)::int from public.assets where id = '31000000-0000-0000-0000-000000000012'), 0, 'authenticated non-admin cannot read an unassociated staged event poster');
 select is((select alt_text from public.assets where id = '31000000-0000-0000-0000-000000000001'), 'Public resource cover', 'authenticated non-admin can read intended safe asset metadata');
 select throws_ok($$select object_path from public.assets where id = '31000000-0000-0000-0000-000000000001'$$, '42501', 'permission denied for table assets', 'authenticated non-admin cannot select object_path');
 select throws_ok($$select original_filename from public.assets where id = '31000000-0000-0000-0000-000000000001'$$, '42501', 'permission denied for table assets', 'authenticated non-admin cannot select original_filename');
@@ -199,7 +215,10 @@ reset role;
 select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000002', true);
 set local role authenticated;
 select is((select user_id::text from public.admin_users), '11000000-0000-0000-0000-000000000002', 'admin sees only their own allow-list entry');
-select is((select count(*)::int from public.resources where publication_status = 'draft'), 8, 'admin can inspect draft resources');
+select is((select count(*)::int from public.assets where id = '31000000-0000-0000-0000-000000000012'), 1, 'admin can inspect staged event poster metadata');
+select is((select publication_status from public.events where id = '41000000-0000-0000-0000-000000000004'), 'cancelled', 'admin can read cancelled events');
+select is((select count(*)::int from public.resources where id between '21000000-0000-0000-0000-000000000001'::uuid and '21000000-0000-0000-0000-000000000017'::uuid and publication_status = 'draft'), 8, 'admin can inspect draft resource fixtures');
+select is((select count(*)::int from public.resources where id = '21000000-0000-0000-0000-000000000018' and publication_status = 'archived'), 1, 'admin can inspect archived sermons for restoration');
 
 -- Admin INSERT/UPDATE/DELETE success for each content table with write grants.
 insert into public.resources (id, resource_type, title) values ('22000000-0000-0000-0000-000000000001', 'audio', 'Admin resource');

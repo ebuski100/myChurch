@@ -5,12 +5,10 @@ import { ArrowIcon } from "./_components/site-chrome";
 const navigation = [
   { label: "Home", href: "#home" },
   { label: "About", href: "/about" },
-  { label: "Events", href: "/events" },
-  { label: "Ministries", href: "/ministries" },
-  { label: "Our Ministry", href: "#ministry" },
-  { label: "Services", href: "#services" },
   { label: "Sermons", href: "/sermons" },
-  { label: "Visit", href: "#visit" },
+  { label: "Events", href: "/events" },
+  { label: "Services", href: "#services" },
+  { label: "Our Ministry", href: "#ministry" },
 ];
 
 function Brand({ light = false }: { light?: boolean }) {
@@ -149,8 +147,8 @@ export default function Home() {
           </div>
           <div className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10">
             <div className="max-w-3xl">
-              <p className="mb-6 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#E6C77D]">
-                {/* <span className="h-px w-8 bg-[#D9B66D]" /> */}
+              <p className="mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#E6C77D]">
+                {/* <span className="h-px w-6 bg-[#D9B66D]" /> */}
                 God&apos;s Massive Grace Explosion Center
               </p>
               <h1 className="max-w-3xl text-4xl font-semibold leading-[1.12] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
@@ -252,7 +250,6 @@ export default function Home() {
                       stroke="currentColor"
                       strokeWidth="1.5"
                       strokeLinecap="round"
-                      strokeLinejoin="round"
                     />
                   </svg>
                 }

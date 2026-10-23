@@ -63,6 +63,7 @@ test("rejects resources that are missing, mismatched, unpublished, or scheduled"
   assert.equal(authorizeSermonAudio(eligibleRow({ id: "other" }), resourceId, "playback", now).ok, false);
   assert.equal(authorizeSermonAudio(eligibleRow({ resource_type: "video" }), resourceId, "playback", now).ok, false);
   assert.equal(authorizeSermonAudio(eligibleRow({ publication_status: "draft" }), resourceId, "playback", now).ok, false);
+  assert.equal(authorizeSermonAudio(eligibleRow({ publication_status: "scheduled" }), resourceId, "playback", now).ok, false);
   assert.equal(authorizeSermonAudio(eligibleRow({ publication_status: "archived" }), resourceId, "playback", now).ok, false);
   assert.equal(authorizeSermonAudio(eligibleRow({ published_at: "2026-10-16T00:00:00.000Z" }), resourceId, "playback", now).ok, false);
 });

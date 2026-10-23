@@ -4,10 +4,10 @@ const navigation = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Events", href: "/events" },
-  { label: "Ministries", href: "/ministries" },
+  { label: "Departments", href: "/departments" },
   { label: "Services", href: "/#services" },
   { label: "Sermons", href: "/sermons" },
-  { label: "Visit", href: "/#visit" },
+  // { label: "Visit", href: "/#visit" },
 ];
 
 export function ArrowIcon() {
@@ -62,7 +62,10 @@ export function SiteHeader() {
     <header className="absolute inset-x-0 top-0 z-10 border-b border-white/10">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8 lg:px-10">
         <Brand />
-        <nav aria-label="Main navigation" className="hidden items-center gap-7 lg:flex lg:gap-8">
+        <nav
+          aria-label="Main navigation"
+          className="hidden items-center gap-7 lg:flex lg:gap-8"
+        >
           {navigation.map((item) => (
             <Link
               key={item.href}
@@ -80,7 +83,10 @@ export function SiteHeader() {
           Plan Your Visit
         </Link>
       </div>
-      <nav aria-label="Mobile navigation" className="flex gap-5 overflow-x-auto px-5 pb-3 lg:hidden">
+      <nav
+        aria-label="Mobile navigation"
+        className="flex gap-5 overflow-x-auto px-5 pb-3 lg:hidden"
+      >
         {navigation.map((item) => (
           <Link
             key={item.href}
@@ -148,4 +154,3 @@ export function SiteFooter() {
     </footer>
   );
 }
-

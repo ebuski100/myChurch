@@ -5,7 +5,7 @@ This folder contains the local Supabase CLI configuration and versioned PostgreS
 ## Schema
 
 - `resource_types` is the controlled catalogue of extensible resource kinds. The initial kinds are audio, video, book/e-book, document, and poster/image. Add future kinds through a migration. Type-specific fields live in relational detail tables with constraints and type checks rather than unchecked JSON.
-- `resources` contains shared resource title, summary, description, slug, type, publication state, and timestamps. A record is public only after it is published and its `published_at` time has arrived.
+- `resources` contains shared resource title, summary, description, slug, type, publication state, and timestamps. Sermon states are draft, scheduled, published, and archived. A record is public only when its state is published and its `published_at` time has arrived.
 - `sermon_details`, `audio_details`, `video_details`, `book_details`, and `document_details` hold fields that only apply to those kinds. Video and reading links must use HTTPS. Video hosting is external in this phase.
 - `assets` stores file metadata and a private storage locator, never file bytes. `resource_assets` relates files to resources, labels their purpose, and stores per-file public-metadata and download permissions.
 - `events` and `ministries` contain their content and publication state. They may refer to an asset for an event poster or ministry image. Event timestamps are stored with a timezone and limited to `Africa/Lagos`.
@@ -20,6 +20,8 @@ Writes are granted to authenticated users at the SQL privilege layer but RLS per
 Public signup is disabled in the local Auth configuration. The hosted Supabase project must also have signup disabled before administrator access is enabled. Do not expose a service-role key in browser code. Do not configure a production upload-size limit until the selected Supabase plan has been verified.
 
 ## Local workflow
+
+Scheduled sermon publication uses the private endpoint and external trigger described in [`docs/sermon-scheduling.md`](../docs/sermon-scheduling.md). No deployment cron provider is configured by this repository.
 
 Requirements: Node.js/npm and Docker Desktop running. These commands use the project-local CLI and only target the local stack:
 

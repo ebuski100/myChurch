@@ -9,10 +9,12 @@ export type Sermon = {
 };
 
 export function formatDuration(durationSeconds: number | null) {
-  if (durationSeconds === null) return null;
+  if (durationSeconds === null || !Number.isSafeInteger(durationSeconds) || durationSeconds <= 0) return null;
 
-  const minutes = Math.floor(durationSeconds / 60);
-  const seconds = durationSeconds % 60;
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  const totalMinutes = Math.floor(durationSeconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) return `${hours} hr${minutes > 0 ? ` ${minutes} min` : ""}`;
+  if (totalMinutes > 0) return `${totalMinutes} min`;
+  return `${durationSeconds} sec`;
 }
