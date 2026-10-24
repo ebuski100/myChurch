@@ -8,7 +8,7 @@ const navigation = [
   { label: "Sermons", href: "/sermons" },
   { label: "Events", href: "/events" },
   { label: "Services", href: "#services" },
-  { label: "Our Ministry", href: "#ministry" },
+  { label: "Departments", href: "/departments" },
 ];
 
 function Brand({ light = false }: { light?: boolean }) {

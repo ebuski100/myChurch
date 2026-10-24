@@ -107,46 +107,75 @@ export default async function EditAdminSermonPage({
               />
             ) : null}
             <EditSermonForm sermon={result.sermon}>
-              <section
-                aria-labelledby="sermon-audio-heading"
-                className="mt-5 rounded-2xl border border-[#E4E7EC] bg-white p-5 shadow-[0_5px_22px_rgba(16,27,51,0.035)] sm:p-7"
-              >
-                <div className="mb-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9A772E]">
-                    Private media
-                  </p>
-                  <h2
-                    id="sermon-audio-heading"
-                    className="mt-1 text-xl font-semibold tracking-tight text-[#101B33]"
-                  >
-                    Sermon audio
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-[#667085]">
-                    Audio is stored privately and remains available to
-                    listeners through the existing authorization flow
-                    after publication.
-                  </p>
-                  <p className="mt-2 text-sm text-[#475467]">
-                    Saved duration:{" "}
-                    <span className="font-semibold">
-                      {formatDuration(
-                        result.sermon.durationSeconds,
-                      ) ??
-                        "Not available; detected when audio is uploaded."}
-                    </span>
-                  </p>
-                </div>
-                <AudioUploadForm
-                  resourceId={result.sermon.id}
-                  hasAudioAsset={result.sermon.hasAudioAsset}
-                  downloadAllowed={result.sermon.downloadAllowed}
-                />
-                <AudioDownloadSetting
-                  resourceId={result.sermon.id}
-                  hasAudioAsset={result.sermon.hasAudioAsset}
-                  downloadAllowed={result.sermon.downloadAllowed}
-                />
-              </section>
+              {result.sermon.mediaType === "video" ? (
+                <section
+                  aria-labelledby="sermon-video-heading"
+                  className="mt-5 rounded-2xl border border-[#E4E7EC] bg-white p-5 shadow-[0_5px_22px_rgba(16,27,51,0.035)] sm:p-7"
+                >
+                  <div className="mb-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9A772E]">
+                      Hosted media
+                    </p>
+                    <h2
+                      id="sermon-video-heading"
+                      className="mt-1 text-xl font-semibold tracking-tight text-[#101B33]"
+                    >
+                      YouTube video
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-[#667085]">
+                      The video stays hosted on YouTube. Change the URL in
+                      the metadata form above; it is validated on save.
+                    </p>
+                    <p className="mt-2 break-all text-sm text-[#475467]">
+                      Saved source:{" "}
+                      <span className="font-semibold">
+                        {result.sermon.youtubeUrl ?? "Not set."}
+                      </span>
+                    </p>
+                  </div>
+                </section>
+              ) : (
+                <section
+                  aria-labelledby="sermon-audio-heading"
+                  className="mt-5 rounded-2xl border border-[#E4E7EC] bg-white p-5 shadow-[0_5px_22px_rgba(16,27,51,0.035)] sm:p-7"
+                >
+                  <div className="mb-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9A772E]">
+                      Private media
+                    </p>
+                    <h2
+                      id="sermon-audio-heading"
+                      className="mt-1 text-xl font-semibold tracking-tight text-[#101B33]"
+                    >
+                      Sermon audio
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-[#667085]">
+                      Audio is stored privately and remains available to
+                      listeners through the existing authorization flow
+                      after publication.
+                    </p>
+                    <p className="mt-2 text-sm text-[#475467]">
+                      Saved duration:{" "}
+                      <span className="font-semibold">
+                        {formatDuration(
+                          result.sermon.durationSeconds,
+                        ) ??
+                          "Not available; detected when audio is uploaded."}
+                      </span>
+                    </p>
+                  </div>
+                  <AudioUploadForm
+                    resourceId={result.sermon.id}
+                    hasAudioAsset={result.sermon.hasAudioAsset}
+                    downloadAllowed={result.sermon.downloadAllowed}
+                  />
+                  <AudioDownloadSetting
+                    resourceId={result.sermon.id}
+                    hasAudioAsset={result.sermon.hasAudioAsset}
+                    downloadAllowed={result.sermon.downloadAllowed}
+                  />
+                </section>
+              )}
               <PublicationControls
                 resourceId={result.sermon.id}
                 title={result.sermon.title}

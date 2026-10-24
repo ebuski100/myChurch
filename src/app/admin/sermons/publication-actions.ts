@@ -12,6 +12,7 @@ import {
   type SermonLifecycleCommand,
 } from "@/lib/sermon-lifecycle";
 import { checkSermonReadyToPublish, isValidPrivateSermonAudioAsset } from "@/lib/sermon-publication";
+import { checkVideoSermonReadyToPublish } from "@/lib/sermon-video-publication";
 import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
 import { createSupabaseStorageServerClient } from "@/lib/supabase/storage-server";
 
@@ -38,7 +39,7 @@ async function verifyPublishableAudio(
   if (!readiness.ok) {
     const messages: Record<string, string> = {
       missing_resource: "This sermon could not be found.",
-      not_audio: "Only audio sermons can be published.",
+      not_audio: "Only audio sermons can be published through the audio check.",
       missing_title: "Add a sermon title before publishing or scheduling.",
       missing_sermon_details: "Add the sermon details before publishing or scheduling.",
       missing_audio_details: "The required audio details are missing.",
@@ -62,6 +63,26 @@ async function verifyPublishableAudio(
     if (!existsError && exists) return { ok: true };
   }
   return { ok: false, message: "The linked private audio file is missing or invalid." };
+}
+
+async function verifyPublishableVideo(
+  resource: Record<string, unknown>,
+  resourceId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const readiness = checkVideoSermonReadyToPublish(resource, resourceId);
+  if (!readiness.ok) {
+    const messages: Record<string, string> = {
+      missing_resource: "This sermon could not be found.",
+      not_video: "Only video sermons can be published through the video check.",
+      missing_title: "Add a sermon title before publishing or scheduling.",
+      missing_sermon_details: "Add the sermon details before publishing or scheduling.",
+      missing_video_details: "The required video details are missing.",
+      missing_video_url: "Add a valid YouTube URL before publishing or scheduling.",
+      invalid_video_url: "The saved YouTube URL is invalid. Update it before publishing or scheduling.",
+    };
+    return { ok: false, message: messages[readiness.reason] };
+  }
+  return { ok: true };
 }
 
 export async function changeSermonLifecycleAction(
@@ -89,18 +110,23 @@ export async function changeSermonLifecycleAction(
       .from("resources")
       .select(`id, title, resource_type, publication_status, published_at,
         sermon_details(resource_id), audio_details(resource_id),
+        video_details(resource_id, external_url),
         resource_assets(purpose, asset_id, assets(id, media_type))`)
       .eq("id", resourceId)
+      .in("resource_type", ["audio", "video"])
       .maybeSingle();
     if (error || !resource) return { success: false, message: "This sermon could not be found or loaded." };
 
     const status = resource.publication_status as "draft" | "scheduled" | "published" | "archived";
+    const mediaType = (resource as { resource_type?: unknown }).resource_type === "video" ? "video" : "audio";
     if (!canTransitionSermon(status, command)) {
       return { success: false, message: `A sermon in ${status} status cannot use this action.` };
     }
 
     if (command === "publish" || command === "schedule") {
-      const verified = await verifyPublishableAudio(resource as unknown as Record<string, unknown>, resourceId);
+      const verified = mediaType === "video"
+        ? await verifyPublishableVideo(resource as unknown as Record<string, unknown>, resourceId)
+        : await verifyPublishableAudio(resource as unknown as Record<string, unknown>, resourceId);
       if (!verified.ok) return { success: false, message: verified.message };
     }
 
@@ -111,7 +137,7 @@ export async function changeSermonLifecycleAction(
       .from("resources")
       .update(fields)
       .eq("id", resourceId)
-      .eq("resource_type", "audio")
+      .eq("resource_type", mediaType)
       .eq("publication_status", status)
       .select("id")
       .maybeSingle();
@@ -123,7 +149,9 @@ export async function changeSermonLifecycleAction(
       schedule: `Sermon scheduled for ${scheduledAt ? new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Lagos" }).format(new Date(scheduledAt)) : "the selected time"} WAT. It remains private until the scheduler publishes it.`,
       unpublish: "Sermon unpublished and returned to drafts.",
       cancel_schedule: "Scheduled publication cancelled. The sermon is now a draft.",
-      archive: "Sermon archived. Its metadata and private audio were retained.",
+      archive: mediaType === "video"
+        ? "Sermon archived. Its metadata and YouTube link were retained."
+        : "Sermon archived. Its metadata and private audio were retained.",
       restore: "Sermon restored as a draft. Review it before publishing or scheduling.",
     };
     return { success: true, message: messages[command] };

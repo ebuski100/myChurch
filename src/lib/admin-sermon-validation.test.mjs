@@ -1,43 +1,78 @@
-import assert from "node:assert/strict";
 import test from "node:test";
+import assert from "node:assert/strict";
+import { validateSermonForm } from "./admin-sermon-validation.ts";
 
-const { validateSermonForm } = await import(new URL("./admin-sermon-validation.ts", import.meta.url).href);
-
-function form(fields) {
+function form(overrides = {}) {
   const data = new FormData();
-  for (const [key, value] of Object.entries(fields)) data.set(key, value);
+  const values = {
+    title: " Sunday Grace ",
+    description: "",
+    preacher: "Pastor Nelson",
+    sermonDate: "2026-10-26",
+    series: "Grace",
+    mediaType: "audio",
+    youtubeUrl: "",
+    ...overrides,
+  };
+  for (const [key, value] of Object.entries(values)) data.set(key, value);
   return data;
 }
 
-test("requires a non-empty title", () => {
-  assert.deepEqual(validateSermonForm(form({ title: "   " })), {
-    ok: false,
-    errors: { title: "Enter a sermon title." },
-  });
-});
-
-test("normalizes optional sermon metadata without accepting a manual duration", () => {
-  assert.deepEqual(validateSermonForm(form({
-    title: "  A Sermon  ", description: "  Notes ", preacher: "", sermonDate: "2026-10-16", series: "  Series ", durationSeconds: "999999",
-  })), {
+test("audio sermons validate without a YouTube URL", () => {
+  const result = validateSermonForm(form());
+  assert.deepEqual(result, {
     ok: true,
-    value: { title: "A Sermon", description: "Notes", preacher: null, sermonDate: "2026-10-16", series: "Series" },
+    value: {
+      title: "Sunday Grace",
+      description: null,
+      preacher: "Pastor Nelson",
+      sermonDate: "2026-10-26",
+      series: "Grace",
+      mediaType: "audio",
+      youtubeUrl: null,
+    },
   });
 });
 
-test("rejects invalid sermon dates", () => {
-  const result = validateSermonForm(form({ title: "Sermon", sermonDate: "2026-02-30" }));
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.ok(result.errors.sermonDate);
+test("video sermons require a YouTube URL and keep it verbatim", () => {
+  const result = validateSermonForm(
+    form({
+      mediaType: "video",
+      youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+    }),
+  );
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal(result.value.mediaType, "video");
+    assert.equal(
+      result.value.youtubeUrl,
+      "https://youtu.be/dQw4w9WgXcQ",
+    );
   }
 });
 
-test("enforces metadata input lengths", () => {
-  const result = validateSermonForm(form({ title: "x".repeat(201), preacher: "x".repeat(201) }));
-  assert.equal(result.ok, false);
-  if (!result.ok) {
-    assert.ok(result.errors.title);
-    assert.ok(result.errors.preacher);
-  }
+test("video sermons reject iframe HTML and non-YouTube input", () => {
+  const injected = validateSermonForm(
+    form({
+      mediaType: "video",
+      youtubeUrl: `<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>`,
+    }),
+  );
+  assert.equal(injected.ok, false);
+  if (!injected.ok) assert.ok(injected.errors.youtubeUrl);
+});
+
+test("missing media type and locked-type changes are rejected", () => {
+  const missing = validateSermonForm(
+    form({ mediaType: "", youtubeUrl: "" }),
+  );
+  assert.equal(missing.ok, false);
+  if (!missing.ok) assert.ok(missing.errors.mediaType);
+
+  const changed = validateSermonForm(
+    form({ mediaType: "video", youtubeUrl: "https://youtu.be/dQw4w9WgXcQ" }),
+    "audio",
+  );
+  assert.equal(changed.ok, false);
+  if (!changed.ok) assert.ok(changed.errors.mediaType);
 });

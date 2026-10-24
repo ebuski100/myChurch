@@ -16,7 +16,11 @@ const sections: {
   { id: "overview", label: "Overview", href: "/admin#overview" },
   { id: "sermons", label: "Sermons", href: "/admin/sermons" },
   { id: "events", label: "Events", href: "/admin/events" },
-  { id: "departments", label: "Departments", href: "/admin/departments" },
+  {
+    id: "departments",
+    label: "Departments",
+    href: "/admin/departments",
+  },
 ];
 
 function MinistryMark({ dark = false }: { dark?: boolean }) {
@@ -216,7 +220,7 @@ export function AdminWorkspace({
 }) {
   return (
     <div className="min-h-screen bg-[#F5F6F8] lg:flex">
-      <aside className="hidden min-h-screen w-64 shrink-0 flex-col bg-[#101B33] px-5 py-6 lg:flex xl:w-72 xl:px-7">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col overflow-y-auto bg-[#101B33] px-5 py-6 lg:flex xl:w-72 xl:px-7">
         <MinistryMark dark />
         <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E6C77D]">

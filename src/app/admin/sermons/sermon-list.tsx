@@ -8,6 +8,7 @@ import type {
   AdminSermon,
   AdminSermonStatus,
 } from "@/lib/admin-sermon-data";
+import type { SermonMediaType } from "@/lib/admin-sermon-validation";
 import { AdminNotice } from "../admin-notice";
 import {
   bulkSermonLifecycleAction,
@@ -15,6 +16,7 @@ import {
 } from "./bulk-actions";
 
 type StatusFilter = "all" | AdminSermonStatus;
+type MediaFilter = "all" | SermonMediaType;
 
 const statusOptions: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -70,19 +72,30 @@ function SermonCard({
           />
           Select
         </label>
-        <span
-          className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold capitalize tracking-wide ${statusStyles[sermon.status]}`}
-        >
-          {sermon.status}
+        <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center rounded-full bg-[#101B33] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
+            {sermon.mediaType === "video" ? "Video" : "Audio"}
+          </span>
+          <span
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold capitalize tracking-wide ${statusStyles[sermon.status]}`}
+          >
+            {sermon.status}
+          </span>
         </span>
         <span
-          className={`inline-flex items-center gap-2 text-xs font-medium ${sermon.hasAudioAsset ? "text-[#3C704B]" : "text-[#8A93A3]"}`}
+          className={`inline-flex items-center gap-2 text-xs font-medium ${sermon.hasMedia ? "text-[#3C704B]" : "text-[#8A93A3]"}`}
         >
           <span
             aria-hidden="true"
-            className={`size-1.5 rounded-full ${sermon.hasAudioAsset ? "bg-[#63A67A]" : "bg-[#C2C8D0]"}`}
+            className={`size-1.5 rounded-full ${sermon.hasMedia ? "bg-[#63A67A]" : "bg-[#C2C8D0]"}`}
           />
-          {sermon.hasAudioAsset ? "Audio linked" : "No audio link"}
+          {sermon.mediaType === "video"
+            ? sermon.hasMedia
+              ? "YouTube linked"
+              : "No YouTube link"
+            : sermon.hasMedia
+              ? "Audio linked"
+              : "No audio link"}
         </span>
       </div>
 
@@ -104,10 +117,12 @@ function SermonCard({
         </div>
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#98A2B3]">
-            Duration
+            {sermon.mediaType === "video" ? "Source" : "Duration"}
           </dt>
           <dd className="mt-1 font-medium text-[#475467]">
-            {duration ?? "Not provided"}
+            {sermon.mediaType === "video"
+              ? "YouTube"
+              : (duration ?? "Not provided")}
           </dd>
         </div>
         {sermon.status === "scheduled" && (
@@ -145,6 +160,7 @@ function SermonCard({
 export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const [mediaType, setMediaType] = useState<MediaFilter>("all");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkState, bulkAction, bulkPending] = useActionState(
@@ -155,6 +171,8 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
   const filteredSermons = sermons.filter((sermon) => {
     const matchesStatus =
       status === "all" || sermon.status === status;
+    const matchesMedia =
+      mediaType === "all" || sermon.mediaType === mediaType;
     const matchesQuery = [
       sermon.title,
       sermon.preacher ?? "",
@@ -164,7 +182,7 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
     ].some((value) =>
       value.toLocaleLowerCase().includes(normalizedQuery),
     );
-    return matchesStatus && matchesQuery;
+    return matchesStatus && matchesMedia && matchesQuery;
   });
   const pageCount = Math.max(
     1,
@@ -194,9 +212,10 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
     });
   }
 
-  function resetFilter(nextQuery: string, nextStatus: StatusFilter) {
+  function resetFilter(nextQuery: string, nextStatus: StatusFilter, nextMedia: MediaFilter) {
     setQuery(nextQuery);
     setStatus(nextStatus);
+    setMediaType(nextMedia);
     setPage(1);
     setSelected(new Set());
   }
@@ -212,7 +231,7 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
         </Link>
       </div>
       <div className="rounded-2xl border border-[#E4E7EC] bg-white p-4 shadow-[0_4px_18px_rgba(16,27,51,0.03)] sm:p-5">
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px_180px]">
           <div>
             <label
               htmlFor="admin-sermon-search"
@@ -246,12 +265,32 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
                 type="search"
                 value={query}
                 onChange={(event) =>
-                  resetFilter(event.target.value, status)
+                  resetFilter(event.target.value, status, mediaType)
                 }
                 placeholder="Title, speaker, or series"
                 className="min-h-11 w-full rounded-xl border border-[#D0D5DD] bg-white pl-10 pr-3 text-sm text-[#101B33] outline-none placeholder:text-[#98A2B3] focus:border-[#9A772E] focus:ring-2 focus:ring-[#D9B66D]/30"
               />
             </div>
+          </div>
+          <div>
+            <label
+              htmlFor="admin-sermon-media"
+              className="mb-2 block text-xs font-semibold text-[#475467]"
+            >
+              Media type
+            </label>
+            <select
+              id="admin-sermon-media"
+              value={mediaType}
+              onChange={(event) =>
+                resetFilter(query, status, event.target.value as MediaFilter)
+              }
+              className="min-h-11 w-full rounded-xl border border-[#D0D5DD] bg-white px-3 text-sm text-[#101B33] outline-none focus:border-[#9A772E] focus:ring-2 focus:ring-[#D9B66D]/30"
+            >
+              <option value="all">All media</option>
+              <option value="audio">Audio</option>
+              <option value="video">Video</option>
+            </select>
           </div>
           <div>
             <label
@@ -264,7 +303,7 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
               id="admin-sermon-status"
               value={status}
               onChange={(event) =>
-                resetFilter(query, event.target.value as StatusFilter)
+                resetFilter(query, event.target.value as StatusFilter, mediaType)
               }
               className="min-h-11 w-full rounded-xl border border-[#D0D5DD] bg-white px-3 text-sm text-[#101B33] outline-none focus:border-[#9A772E] focus:ring-2 focus:ring-[#D9B66D]/30"
             >
@@ -410,8 +449,8 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
               No sermon records found
             </h2>
             <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-[#667085]">
-              Sermons appear here when an audio resource has its
-              sermon details record.
+              Sermons appear here when an audio or video resource has
+              its sermon details record.
             </p>
             <Link
               href="/sermons"
@@ -496,12 +535,11 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
               No sermons match these filters
             </h2>
             <p className="mt-2 text-sm text-[#667085]">
-              Adjust the search or choose a different publication
-              status.
+              Adjust the search or choose different filters.
             </p>
             <button
               type="button"
-              onClick={() => resetFilter("", "all")}
+              onClick={() => resetFilter("", "all", "all")}
               className="mt-4 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
             >
               Clear filters

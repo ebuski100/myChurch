@@ -15,7 +15,7 @@ export type PublicationCheckResult =
 
 type Relation<T> = T | T[] | null | undefined;
 
-type PublicationRow = {
+export type PublicationRow = {
   id?: unknown;
   title?: unknown;
   resource_type?: unknown;

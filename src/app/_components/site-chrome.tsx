@@ -7,12 +7,16 @@ const navigation = [
   { label: "Departments", href: "/departments" },
   { label: "Services", href: "/#services" },
   { label: "Sermons", href: "/sermons" },
-  // { label: "Visit", href: "/#visit" },
 ];
 
 export function ArrowIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="size-4">
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      fill="none"
+      className="size-4"
+    >
       <path
         d="M4 10h12m-5-5 5 5-5 5"
         stroke="currentColor"
