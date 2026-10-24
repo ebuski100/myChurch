@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AudioPlayerProvider } from "@/app/sermons/audio-player-provider";
+
+import { ListenLaterProvider } from "@/app/sermons/listen-later-provider";
 
 export const metadata: Metadata = {
   title: "VictoryCity Revival Ministry | Massive Grace Explosion",
@@ -10,7 +13,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ListenLaterProvider>
+          <AudioPlayerProvider>{children}</AudioPlayerProvider>
+        </ListenLaterProvider>
+      </body>
     </html>
   );
 }

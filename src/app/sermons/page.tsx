@@ -22,7 +22,8 @@ async function SermonResults() {
           Sermon library temporarily unavailable
         </h3>
         <p className="mt-2 text-sm leading-6 text-[#667085]">
-          We couldn&apos;t load the published sermons. Please try again later.
+          We couldn&apos;t load the published sermons. Please try
+          again later.
         </p>
       </div>
     );
@@ -34,7 +35,9 @@ async function SermonResults() {
 function SermonResultsFallback() {
   return (
     <div aria-live="polite" aria-busy="true" className="space-y-4">
-      <p className="text-sm text-[#667085]">Loading published sermons…</p>
+      <p className="text-sm text-[#667085]">
+        Loading published sermons…
+      </p>
       <div className="grid gap-5 md:grid-cols-2">
         {[0, 1].map((item) => (
           <div
@@ -62,15 +65,15 @@ export default function SermonsPage() {
             <div className="max-w-3xl">
               <p className="mb-6 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#E6C77D]">
                 <span className="h-px w-8 bg-[#D9B66D]" />
-                Audio library
+                Message Library
               </p>
               <h1 className="text-4xl font-semibold leading-[1.12] tracking-[-0.04em] text-white sm:text-6xl">
                 Messages for your week.
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-7 text-white/70 sm:text-lg sm:leading-8">
-                Find a message by title or preacher, then listen here when a
-                recording is available. We look forward to sharing the
-                ministry&apos;s sermons with you.
+                Find a message by title or preacher, then listen here
+                when a recording is available. We look forward to
+                sharing the ministry&apos;s sermons with you.
               </p>
             </div>
           </div>
@@ -88,8 +91,8 @@ export default function SermonsPage() {
                 </h2>
               </div>
               <p className="max-w-xl text-sm leading-6 text-[#667085]">
-                Browse published sermon details. Recordings will play here when
-                authorized audio access is available.
+                Browse published sermon details. Recordings will play
+                here when authorized audio access is available.
               </p>
             </div>
             <Suspense fallback={<SermonResultsFallback />}>
