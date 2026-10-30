@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   description: "Return to the sermons you saved to listen to later.",
 };
 
+// Allow this route to wait for its request-time sermon data.
+export const instant = false;
+
 export default async function ListenLaterPage() {
   await io();
   const result = await getPublishedAudioSermons();

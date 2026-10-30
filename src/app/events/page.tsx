@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { SiteFooter, SiteHeader } from "../_components/site-chrome";
 import type { ChurchEvent } from "@/lib/events";
 import { getPublishedEvents } from "@/lib/event-data";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Events | VictoryCity Revival Ministry",
@@ -175,10 +176,10 @@ export default async function EventsPage() {
   );
 
   return (
-    <>
+    <div className="pt-20">
       <SiteHeader />
       <main>
-        <section className="relative isolate overflow-hidden bg-[#101B33] pb-14 pt-44 sm:pb-16 sm:pt-48">
+        {/* <section className="relative isolate overflow-hidden bg-[#101B33] pb-14 pt-44 sm:pb-16 sm:pt-48">
           <div
             aria-hidden="true"
             className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_35%,rgba(217,182,109,0.17),transparent_36%),radial-gradient(ellipse_at_4%_100%,rgba(62,91,145,0.2),transparent_40%)]"
@@ -198,6 +199,55 @@ export default async function EventsPage() {
               </p>
             </div>
           </div>
+        </section> */}
+
+        <section className="relative isolate  overflow-hidden bg-[#0B1428] pb-5 pt-36  sm:pb-4 sm:pt-40  lg:pt-44">
+          {/* Background photograph */}
+          <div aria-hidden="true" className="absolute inset-0 -z-20">
+            <Image
+              src="/images/events.png"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+          </div>
+
+          {/* Keep text readable without hiding the photograph */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0B1428]/95 via-[#0B1428]/70 to-[#0B1428]/20"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0B1428]/75 via-transparent to-[#0B1428]/20"
+          />
+
+          <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+            <div className="max-w-3xl">
+              <p className="mb-6 inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#E6C77D]">
+                <span className="h-px w-8 bg-[#D9B66D]" />
+                Life together
+              </p>
+
+              <h1 className="text-4xl font-semibold leading-[1.12] tracking-[-0.04em] text-white sm:text-6xl">
+                Events at{" "}
+                <span className="text-[#D9B66D]">VictoryCity.</span>
+              </h1>
+
+              <p className="mt-6 max-w-2xl text-base leading-7 text-white/85 sm:text-lg sm:leading-8">
+                Find confirmed gatherings and ministry events here.
+                We&apos;ll share the details when they are ready.
+              </p>
+            </div>
+          </div>
+
+          {/* Gold accent */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#D9B66D]/70 to-transparent"
+          />
         </section>
 
         <section className="bg-[#F3F4F6] py-14 sm:py-20">
@@ -257,6 +307,6 @@ export default async function EventsPage() {
         </section>
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }
