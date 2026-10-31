@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { signOutAction } from "./actions";
-
+import Image from "next/image";
 export type AdminWorkspaceSection =
   | "overview"
   | "sermons"
@@ -23,44 +23,76 @@ const sections: {
   },
 ];
 
+// function MinistryMark({ dark = false }: { dark?: boolean }) {
+//   return (
+//     <Link
+//       href="/admin#overview"
+//       className="inline-flex items-center gap-3"
+//       aria-label="VictoryCity admin overview"
+//     >
+//       <span
+//         className={`grid size-10 place-items-center rounded-full border ${dark ? "border-white/20 bg-white/10 text-[#E6C77D]" : "border-[#D9B66D]/40 bg-[#D9B66D]/10 text-[#9A772E]"}`}
+//       >
+//         <svg
+//           aria-hidden="true"
+//           viewBox="0 0 24 24"
+//           fill="none"
+//           className="size-5"
+//         >
+//           <path
+//             d="M12 3v18M5 9h14M7 17l5-5 5 5"
+//             stroke="currentColor"
+//             strokeWidth="1.5"
+//             strokeLinecap="round"
+//             strokeLinejoin="round"
+//           />
+//         </svg>
+//       </span>
+//       <span className="leading-tight">
+//         <span
+//           className={`block text-sm font-semibold tracking-wide ${dark ? "text-white" : "text-[#101B33]"}`}
+//         >
+//           VictoryCity
+//         </span>
+//         <span
+//           className={`mt-1 block text-[10px] font-medium uppercase tracking-[0.16em] ${dark ? "text-white/55" : "text-[#667085]"}`}
+//         >
+//           Admin workspace
+//         </span>
+//       </span>
+//     </Link>
+//   );
+// }
+
 function MinistryMark({ dark = false }: { dark?: boolean }) {
   return (
-    <Link
-      href="/admin#overview"
-      className="inline-flex items-center gap-3"
-      aria-label="VictoryCity admin overview"
-    >
-      <span
-        className={`grid size-10 place-items-center rounded-full border ${dark ? "border-white/20 bg-white/10 text-[#E6C77D]" : "border-[#D9B66D]/40 bg-[#D9B66D]/10 text-[#9A772E]"}`}
-      >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 24 24"
-          fill="none"
-          className="size-5"
-        >
-          <path
-            d="M12 3v18M5 9h14M7 17l5-5 5 5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
+    <div className="flex items-center gap-3">
+      <Image
+        src="/images/victory-city-logo.png"
+        alt="VictoryCity Revival Ministry logo"
+        width={48}
+        height={48}
+        priority
+        className="size-12 shrink-0 rounded-full object-contain"
+      />
+
       <span className="leading-tight">
         <span
-          className={`block text-sm font-semibold tracking-wide ${dark ? "text-white" : "text-[#101B33]"}`}
+          className={`block text-sm font-semibold tracking-wide ${
+            dark ? "text-white" : "text-[#101B33]"
+          }`}
         >
           VictoryCity
         </span>
         <span
-          className={`mt-1 block text-[10px] font-medium uppercase tracking-[0.16em] ${dark ? "text-white/55" : "text-[#667085]"}`}
+          className={`mt-1 block text-[10px] font-medium uppercase tracking-[0.16em] ${
+            dark ? "text-white/65" : "text-[#101B33]/60"
+          }`}
         >
           Admin workspace
         </span>
       </span>
-    </Link>
+    </div>
   );
 }
 
@@ -211,6 +243,35 @@ function AdminNavigation({
   );
 }
 
+function PublicWebsiteLink({ mobile = false }: { mobile?: boolean }) {
+  return (
+    <Link
+      href="/"
+      className={
+        mobile
+          ? "inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-sm font-medium text-[#475467] transition-colors hover:text-[#101B33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] lg:hidden"
+          : "mb-4 flex min-h-10 items-center gap-3 px-3 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D]"
+      }
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        fill="none"
+        className="size-[18px]"
+      >
+        <path
+          d="M8 4H4.5v12H8M11 6l4 4-4 4m4-4H7"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      View public website
+    </Link>
+  );
+}
+
 export function AdminWorkspace({
   activeSection,
   children,
@@ -232,36 +293,21 @@ export function AdminWorkspace({
         </div>
         <AdminNavigation activeSection={activeSection} />
         <div className="mt-auto border-t border-white/10 pt-5">
-          <Link
-            href="/"
-            className="mb-4 flex min-h-10 items-center gap-3 px-3 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D]"
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 20 20"
-              fill="none"
-              className="size-[18px]"
-            >
-              <path
-                d="M8 4H4.5v12H8M11 6l4 4-4 4m4-4H7"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            View public website
-          </Link>
+          <PublicWebsiteLink />
           <SignOutButton />
         </div>
       </aside>
+
       <div className="min-w-0 flex-1">
         <header className="border-b border-[#E4E7EC] bg-white lg:hidden">
-          <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center justify-between gap-3 px-5 py-4">
             <MinistryMark />
             <SignOutButton compact />
           </div>
           <AdminNavigation activeSection={activeSection} mobile />
+          <div className="border-t border-[#F2F4F7] px-5 py-2">
+            <PublicWebsiteLink mobile />
+          </div>
         </header>
         {children}
       </div>

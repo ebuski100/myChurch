@@ -18,7 +18,6 @@ function isNavigationItemActive(pathname: string, href: string) {
     return pathname === "/";
   }
 
-  // Services links to a section on the homepage, not a separate page.
   if (href.startsWith("/#")) {
     return false;
   }
@@ -53,40 +52,6 @@ export function ArrowIcon() {
   );
 }
 
-// function Brand() {
-//   return (
-//     <Link
-//       href="/"
-//       aria-label="VictoryCity Revival Ministry home"
-//       className="inline-flex items-center gap-3"
-//     >
-//       <span
-//         aria-hidden="true"
-//         className="grid size-10 place-items-center rounded-full border border-white/25 bg-white/10 text-[#E6C77D]"
-//       >
-//         <svg viewBox="0 0 24 24" fill="none" className="size-5">
-//           <path
-//             d="M12 3v18M5 9h14M7 17l5-5 5 5"
-//             stroke="currentColor"
-//             strokeWidth="1.5"
-//             strokeLinecap="round"
-//             strokeLinejoin="round"
-//           />
-//         </svg>
-//       </span>
-
-//       <span className="leading-tight">
-//         <span className="block text-sm font-semibold tracking-wide text-white">
-//           VictoryCity
-//         </span>
-//         <span className="mt-1 block text-[10px] font-medium uppercase tracking-[0.16em] text-white/65">
-//           Revival Ministry
-//         </span>
-//       </span>
-//     </Link>
-//   );
-// }
-
 function Brand() {
   return (
     <Link
@@ -100,7 +65,7 @@ function Brand() {
         width={48}
         height={48}
         priority
-        className="size-12 rounded-full shrink-0 object-contain"
+        className="size-12 shrink-0 rounded-full object-contain"
       />
 
       <span className="leading-tight">
@@ -255,23 +220,33 @@ export function SiteFooter() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
           <p>VictoryCity Revival Ministry. All rights reserved.</p>
-          <a
-            href="https://web.facebook.com/profile.php?id=100067393373513"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center gap-2 text-white/65 hover:text-white ${focusClass}`}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="size-4"
-              aria-hidden="true"
+
+          <div className="flex flex-wrap items-center gap-5">
+            <Link
+              href="/admin/login"
+              className={`text-white/40 transition-colors hover:text-[#E6C77D] ${focusClass}`}
             >
-              <path d="M13.5 21v-7.2h2.4l.4-2.8h-2.8V9.2c0-.8.2-1.4 1.4-1.4h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2H8v2.8h2.5V21h3Z" />
-            </svg>
-            Follow us on Facebook
-            <ArrowIcon />
-          </a>
+              Admin
+            </Link>
+
+            <a
+              href="https://web.facebook.com/profile.php?id=100067393373513"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 text-white/65 hover:text-white ${focusClass}`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="size-4"
+                aria-hidden="true"
+              >
+                <path d="M13.5 21v-7.2h2.4l.4-2.8h-2.8V9.2c0-.8.2-1.4 1.4-1.4h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2H8v2.8h2.5V21h3Z" />
+              </svg>
+              Follow us on Facebook
+              <ArrowIcon />
+            </a>
+          </div>
         </div>
       </div>
     </footer>

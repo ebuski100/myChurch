@@ -1,0 +1,163 @@
+-- VictoryCity M1 two-session concurrency tests (manual, two psql sessions).
+--
+-- This file is documentation, not a script: paste each CASE block into two
+-- psql sessions in the order given. Do not execute this file as a whole.
+--
+-- PREREQUISITES (local only, never production)
+--   Session A: psql "<direct-db-url-from-supabase-status>"   (NOT the pooler URL)
+--   Session B: psql "<direct-db-url-from-supabase-status>"   (same URL, second connection)
+--   Both sessions: SET application_name to 'm1-test-A' / 'm1-test-B' for lock tracing.
+--
+-- SETUP (run once, either session; rolled back per case, fixtures kept minimal)
+--   These fixtures live only for the test window and are deleted in TEARDOWN.
+--   They assume bootstrap+guard already verified on this scratch database
+--   (guard activation dry-run covers zero-guard behavior; T2/T4 below assume
+--   the guard IS active — skip them on a pre-guard database and note why).
+--
+--   insert into auth.users (id) values
+--     ('13000000-0000-0000-0000-000000000001'),  -- P0 (bootstrap this one primary first)
+--     ('13000000-0000-0000-0000-000000000002'),  -- S1
+--     ('13000000-0000-0000-0000-000000000003');  -- S2
+--   Follow supabase/manual/bootstrap_primary.sql with <TARGET_UUID> =
+--   13000000-0000-0000-0000-000000000001, then activate the guard.
+--
+--   Enroll S1 and S2 as standard admins (bootstrap only promotes P0;
+--   it does not enroll the other fixtures):
+--   insert into public.admin_users (user_id, role, is_active) values
+--     ('13000000-0000-0000-0000-000000000002', 'standard', true),
+--     ('13000000-0000-0000-0000-000000000003', 'standard', true);
+--
+--   Verify enrollment before starting the cases (expect 3 rows: P0 primary,
+--   S1/S2 standard, count(active primary)=1 with id P0):
+--   select user_id, role, is_active from public.admin_users order by user_id;
+--   select count(*) filter (where role='primary' and is_active) as active_primaries,
+--          max(user_id) filter (where role='primary' and is_active) as primary_id
+--     from public.admin_users;
+--
+-- HOW TO RUN EACH CASE
+--   Paste the A-block into session A and the B-block into session B in the
+--   order given. "HOLD" means: execute the BEGIN..statement, leave the txn
+--   open, and wait. Observe blocking via:
+--     select pid, application_name, wait_event_type, wait_event, query
+--       from pg_stat_activity where datname = current_database();
+--   After each case: verify with the ASSERT block (either session), then
+--   ROLLBACK or COMMIT as noted so the next case starts from count=1, id=P0.
+--
+-- CASE T1: two competing promotions via handover (S1 wins, S2 fenced out).
+--   Why not "promote S1, HOLD, then promote S2"? P0 is already the active
+--   primary, so a bare `UPDATE ... SET role='primary'` for S1 violates the
+--   immediate partial unique index at once and can never be held open.
+--   Competing promotions must each be framed as a handover (demote-current
+--   plus promote-candidate in ONE transaction); the transaction-level advisory
+--   lock serializes the two handovers and the unique index rejects the loser.
+--   A: BEGIN;
+--      UPDATE public.admin_users
+--        SET role='standard', is_active=false, deactivated_at=now()
+--        WHERE user_id='13000000-0000-0000-0000-000000000001';  -- demote P0, takes advisory lock
+--      UPDATE public.admin_users
+--        SET role='primary', is_active=true, deactivated_at=null, deactivated_by=null
+--        WHERE user_id='13000000-0000-0000-0000-000000000002';  -- promote S1. HOLD txn open.
+--   B: BEGIN; UPDATE public.admin_users
+--        SET role='primary', is_active=true, deactivated_at=null, deactivated_by=null
+--        WHERE user_id='13000000-0000-0000-0000-000000000003';  -- promote S2: blocks inside
+--        the BEFORE trigger on pg_advisory_xact_lock (A holds it). The row is NOT updated yet.
+--   A: COMMIT;  -- succeeds: demote-then-promote commits with exactly one primary (S1).
+--        The deferred guard sees count=1. The advisory lock is released.
+--   B: (unblocks, UPDATE now executes) -- S1 is now the active primary, so the row
+--        update hits admin_users_single_active_primary -> ERROR 23505 unique violation.
+--        B's transaction is now ABORTED: every further command in session B fails with
+--        "current transaction is aborted, commands ignored until end of transaction block"
+--        until a ROLLBACK is issued. The ERROR is the expected outcome, not a success.
+--   B: ROLLBACK;  -- mandatory. Discards the failed promotion; changes nothing.
+--   ASSERT: select user_id, role, is_active from public.admin_users order by user_id;
+--     expect S1 primary/active, P0 standard/inactive, S2 standard/active,
+--     count(primary,active)=1 AND id=S1.
+--   RESTORE before the next case (handover back S1->P0, single txn, guard stays active):
+--     BEGIN;
+--     UPDATE public.admin_users SET role='standard', is_active=false, deactivated_at=now()
+--       WHERE user_id='13000000-0000-0000-0000-000000000002';
+--     UPDATE public.admin_users SET role='primary', is_active=true,
+--       deactivated_at=null, deactivated_by=null
+--       WHERE user_id='13000000-0000-0000-0000-000000000001';
+--     COMMIT;  -- succeeds, seat back to P0.
+--   ASSERT: count(primary,active)=1 AND
+--     id='13000000-0000-0000-0000-000000000001' (P0).
+--
+-- CASE T2: deactivation racing deletion (both roll back at COMMIT, seat intact).
+--   REQUIRES guard active. If guard not active, record SKIP with reason.
+--   A: BEGIN; UPDATE public.admin_users SET is_active=false, deactivated_at=now()
+--        WHERE user_id='13000000-0000-0000-0000-000000000001';  -- HOLD
+--   B: BEGIN; DELETE FROM public.admin_users
+--        WHERE user_id='13000000-0000-0000-0000-000000000001';  -- blocks on row lock
+--   A: COMMIT;  -- expect ERROR P0001 PRIMARY_GUARD_ZERO from the deferred
+--                 trigger. The transaction is now ABORTED. A failed COMMIT is not a
+--                 successful transaction: every further command in session A fails with
+--                 "current transaction is aborted ..." until a ROLLBACK is issued.
+--                 Do NOT assume B's waiting DELETE became a no-op: observe it unblock next.
+--   A: ROLLBACK;  -- mandatory. Discards the failed deactivation; A is usable again.
+--   B: (unblocks, DELETE now executes) COMMIT;  -- expect ERROR P0001 PRIMARY_GUARD_ZERO;
+--        B's transaction is likewise ABORTED, not committed. B rolls back via:
+--   B: ROLLBACK;  -- mandatory. Discards the failed delete.
+--   ASSERT: P0 row present, is_active=true, deactivated_at null; auth.users P0
+--     still exists; count(primary,active)=1.
+--
+-- CASE T3: handover racing recovery (exactly one winner, never 0 or 2).
+--   REQUIRES M5 recover_primary(); SKIP on M1-only database, record reason.
+--   Documented here so the procedure is reviewed before M5 lands.
+--   A (handover P0->S1): BEGIN; SELECT pg_advisory_xact_lock(...singleton...);
+--     SELECT * FROM public.admin_users
+--       WHERE user_id IN ('...0001','...0002') FOR UPDATE;
+--     UPDATE ... SET role='standard', is_active=false, deactivated_at=now()
+--       WHERE user_id='...0001';  -- HOLD before promoting S1.
+--   B (recovery to S2): SELECT public.recover_primary('...0003','documented reason ...');
+--     -- blocks on the same advisory key.
+--   A: UPDATE ... SET role='primary', is_active=true,
+--        deactivated_at=null WHERE user_id='...0002'; COMMIT;  -- seat = S1.
+--   B: (unblocks) commits; deactivates-others-first (S1), promotes S2.
+--   ASSERT: count(primary,active)=1 AND id=S2; audit has primary_handover +
+--     primary_recovery rows. Reverse order likewise ends at count 1 with the
+--     later committer's target. Never 0 (deferred trigger) nor 2 (unique index).
+--
+-- CASE T4: Auth-cascade deletion of the only primary (whole txn rolls back).
+--   REQUIRES guard active. Run ONLY on a scratch clone with fixture auth users.
+--   B: BEGIN; DELETE FROM auth.users
+--        WHERE id='13000000-0000-0000-0000-000000000001';  -- HOLD
+--   Observe: cascaded child DELETE on admin_users fires lock_primary_mutation
+--     (OLD was active primary -> lock) and the deferred check.
+--   B: COMMIT;  -- expect ERROR P0001 PRIMARY_GUARD_ZERO; the entire txn is
+--        ABORTED and rolls back, including the parent auth.users delete. A failed
+--        COMMIT is not a successful transaction: issue ROLLBACK in session B
+--        before any further SQL there.
+--   B: ROLLBACK;  -- mandatory after the failed COMMIT.
+--   ASSERT: auth.users P0 EXISTS, admin_users P0 active/primary,
+--     count(primary,active)=1. Record that the parent delete did NOT survive.
+--
+-- CASE T5: direct bypass attempts (all fail or roll back).
+--   (a) INSERT second primary:
+--       INSERT INTO public.admin_users(user_id, role) VALUES ('...0003','primary');
+--       expect ERROR 23505 (seat occupied).
+--   (b) Demote last primary:
+--       BEGIN; UPDATE public.admin_users SET role='standard'
+--         WHERE role='primary' and is_active; COMMIT;
+--       expect ERROR P0001 PRIMARY_GUARD_ZERO at COMMIT (guard active).
+--   (c) TRUNCATE public.admin_users;  -- expect permission denied for the role used.
+--   ASSERT after each: count(primary,active)=1, surviving id recorded.
+--
+-- TEARDOWN (after all cases pass; scratch database only)
+--   The at-least-one-primary guard stays ACTIVE throughout. Never disable or
+--   drop it for cleanup. P0 must remain the active primary; remove ONLY the
+--   S1/S2 fixture rows (T1's handover-back restore has already returned the
+--   seat to P0; if any case left the seat elsewhere, hand it back first with
+--   the demote-then-promote handover in a single transaction).
+--   delete from public.admin_users
+--     where user_id in ('13000000-0000-0000-0000-000000000002',
+--                       '13000000-0000-0000-0000-000000000003');
+--   delete from auth.users
+--     where id in ('13000000-0000-0000-0000-000000000002',
+--                  '13000000-0000-0000-0000-000000000003');
+--   FINAL VERIFICATION (guard still active): P0 is the only active primary.
+--   select count(*) filter (where role='primary' and is_active) as active_primaries,
+--          max(user_id) filter (where role='primary' and is_active) as primary_id
+--     from public.admin_users;
+--   expect active_primaries=1 AND
+--     primary_id='13000000-0000-0000-0000-000000000001' (P0).
