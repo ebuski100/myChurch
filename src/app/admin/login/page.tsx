@@ -86,7 +86,7 @@ import { redirect } from "next/navigation";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { signInAction } from "./actions";
 import AdminLoginForm from "./admin-login-form";
-
+import Image from "next/image";
 export const metadata: Metadata = {
   title: "Admin Sign In | VictoryCity Revival Ministry",
   robots: { index: false, follow: false },
@@ -152,9 +152,18 @@ export default async function AdminLoginPage({
           <div className="relative">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#D9B66D]/50 bg-[#D9B66D]/10">
-                <span className="font-serif text-xl font-semibold text-[#E5C887]">
+                {/* <span className="font-serif text-xl font-semibold text-[#E5C887]">
                   V
-                </span>
+                </span> */}
+
+                <Image
+                  src="/images/victory-city-logo.png"
+                  alt="VictoryCity Revival Ministry logo"
+                  width={48}
+                  height={48}
+                  priority
+                  className="size-12 shrink-0 rounded-full object-contain"
+                />
               </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#E5C887]">
