@@ -19,7 +19,7 @@
 
 begin;
 
-select plan(21);
+select plan(22);
 
 -- Precondition: empty admin_users (disposable database). ---------------------
 select is(
@@ -118,11 +118,34 @@ select is(
   (select deactivated_by::text from public.admin_users where user_id='12000000-0000-0000-0000-000000000002'),
   '12000000-0000-0000-0000-000000000001', 'deactivation metadata recorded, not erased');
 
+-- Test: inactive row without deactivated_at violates active-needs-timestamp
+-- check. Two assertions because pgTAP 1.3.3 offers no single call combining
+-- exact-SQLSTATE matching with pattern message matching (throws_ok compares
+-- the message literally; throws_like/throws_matching take no errcode or
+-- description). (1) throws_ok/2 pins SQLSTATE 23514 exactly (NULL message).
+-- (2) A catch-and-inspect block asserts the message NAMES the constraint:
+-- only the quoted constraint name is matched, never the full sentence,
+-- because PG17 words it 'new row for relation "admin_users" violates check
+-- constraint ...' while older versions word it 'new row violates ...'.
 select throws_ok(
   $$insert into public.admin_users (user_id, role, is_active)
     values ('12000000-0000-0000-0000-000000000003', 'standard', false)$$,
-  '23514', 'new row violates check constraint "admin_users_active_needs_timestamp"',
-  'inactive row without deactivated_at violates active-needs-timestamp check');
+  23514);
+do $$
+declare
+  v_msg text;
+begin
+  begin
+    insert into public.admin_users (user_id, role, is_active)
+      values ('12000000-0000-0000-0000-000000000003', 'standard', false);
+  exception when check_violation then
+    get stacked diagnostics v_msg = message_text;
+  end;
+  perform ok(
+    v_msg like '%"admin_users_active_needs_timestamp"%',
+    'rejection names the admin_users_active_needs_timestamp constraint (got: ' || coalesce(v_msg, '<no error>') || ')');
+end
+$$;
 
 -- 8. Existing RLS posture on admin_users unchanged by M1. ---------------------
 select ok(

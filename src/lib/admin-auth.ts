@@ -1,7 +1,13 @@
 import "server-only";
 
 import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
-import { decideAdminAccess } from "@/lib/admin-authorization";
+import { decideAdminAccess, type AdminRole } from "@/lib/admin-authorization";
+
+type AdminUserRow = {
+  user_id: string;
+  role: string;
+  is_active: boolean;
+};
 
 export async function getAdminAccess() {
   const supabase = await createSupabaseAuthServerClient();
@@ -14,7 +20,7 @@ export async function getAdminAccess() {
 
   const { data: adminRecord, error } = await supabase
     .from("admin_users")
-    .select("user_id")
+    .select("user_id, role, is_active")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -22,5 +28,18 @@ export async function getAdminAccess() {
     throw new Error("Administrator access could not be verified.");
   }
 
-  return decideAdminAccess(user.id, adminRecord?.user_id ?? null);
+  const row = adminRecord as AdminUserRow | null;
+
+  return decideAdminAccess(
+    user.id,
+    row
+      ? {
+          userId: row.user_id,
+          role: row.role as AdminRole,
+          // Strict comparison: a missing or null value is treated as inactive,
+          // so an unexpected column shape fails closed.
+          isActive: row.is_active === true,
+        }
+      : null,
+  );
 }
