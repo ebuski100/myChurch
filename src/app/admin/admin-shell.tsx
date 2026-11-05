@@ -221,6 +221,7 @@ function AdminNavigation({
           <Link
             key={section.id}
             href={section.href}
+            prefetch={false}
             aria-current={active ? "page" : undefined}
             className={
               mobile

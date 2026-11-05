@@ -13,7 +13,8 @@ import { transferPrimaryAdminAction } from "./actions";
 import { PrimaryTransferForm } from "./transfer-form";
 
 export const metadata: Metadata = {
-  title: "Primary role transfer | Admin | VictoryCity Revival Ministry",
+  title:
+    "Primary role transfer | Admin | VictoryCity Revival Ministry",
   robots: { index: false, follow: false },
 };
 
@@ -36,7 +37,7 @@ function shortId(value: string): string {
 function Breadcrumb() {
   return (
     <div className="mb-7 flex items-center gap-2 text-xs text-[#98A2B3]">
-      <Link href="/admin" className="hover:text-[#101B33]">
+      <Link href="/admin" prefetch={false} className="hover:text-[#101B33]">
         Admin
       </Link>
       <span aria-hidden="true">/</span>
@@ -57,6 +58,7 @@ function RestrictedPanel() {
       </p>
       <Link
         href="/admin"
+        prefetch={false}
         className="mt-5 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
       >
         Back to overview
@@ -144,8 +146,8 @@ export default async function PrimaryTransferPage() {
           ) : candidatesResult.candidates.length === 0 ? (
             <div className="rounded-xl border border-[#E4E7EC] bg-[#F8F9FB] px-4 py-3 text-sm leading-6 text-[#475467]">
               There are no active standard administrators to hand the
-              seat to. Enrol an administrator first, then return to this
-              screen.
+              seat to. Enrol an administrator first, then return to
+              this screen.
             </div>
           ) : (
             <PrimaryTransferForm
@@ -192,7 +194,10 @@ export default async function PrimaryTransferPage() {
                       {shortId(entry.previousPrimaryId)}
                     </span>{" "}
                     <span aria-hidden="true">→</span>
-                    <span className="sr-only"> transferred to </span>{" "}
+                    <span className="sr-only">
+                      {" "}
+                      transferred to{" "}
+                    </span>{" "}
                     <span className="font-mono text-xs text-[#475467]">
                       {shortId(entry.newPrimaryId)}
                     </span>
