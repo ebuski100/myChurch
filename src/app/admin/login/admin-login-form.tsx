@@ -1,20 +1,29 @@
 "use client";
 
 import { useState } from "react";
-
+import Link from "next/link";
 type AdminLoginFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   error: string | null;
+  invitationToken?: string;
 };
 
 export default function AdminLoginForm({
   action,
   error,
+  invitationToken,
 }: AdminLoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form action={action} className="space-y-5">
+      {invitationToken && (
+        <input
+          type="hidden"
+          name="invitationToken"
+          value={invitationToken}
+        />
+      )}
       {error && (
         <div
           role="alert"
@@ -96,6 +105,14 @@ export default function AdminLoginForm({
           →
         </span>
       </button>
+      <div className="flex justify-end">
+        <Link
+          href="/admin/forgot-password"
+          className="text-xs font-semibold text-[#8A7447] transition hover:text-[#101B33]"
+        >
+          Forgot password?
+        </Link>
+      </div>
     </form>
   );
 }

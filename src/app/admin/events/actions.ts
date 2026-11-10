@@ -25,13 +25,7 @@ async function requireAdmin(): Promise<string> {
   if (access.status === "unauthenticated") redirect("/admin/login");
   if (access.status === "forbidden")
     redirect("/admin/login?error=not_admin");
-  const supabase = await createSupabaseAuthServerClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) redirect("/admin/login");
-  return user.id;
+  return access.userId;
 }
 
 function readPosterAssetId(form: FormData): string | null | false {

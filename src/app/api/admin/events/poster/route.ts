@@ -126,21 +126,8 @@ async function getAuthorizedClients(): Promise<
 
   try {
     const database = await createSupabaseAuthServerClient();
-    const {
-      data: { user },
-      error,
-    } = await database.auth.getUser();
-    if (error || !user) {
-      return {
-        ok: false,
-        response: json(
-          "Administrator access could not be verified.",
-          503,
-        ),
-      };
-    }
     const storage = createSupabaseStorageServerClient();
-    return { ok: true, userId: user.id, database, storage };
+    return { ok: true, userId: access.userId, database, storage };
   } catch {
     return {
       ok: false,

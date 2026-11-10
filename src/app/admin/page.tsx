@@ -8,6 +8,7 @@ import {
   getAdminDashboardCounts,
   type AdminDashboardCounts,
 } from "@/lib/admin-dashboard-data";
+import { AdminNotice } from "./admin-notice";
 import {
   AdminSectionIcon,
   AdminWorkspace,
@@ -137,6 +138,7 @@ function PreviewLink({
   return (
     <Link
       href={href}
+      prefetch={href.startsWith("/admin") ? false : undefined}
       className="group flex min-h-16 items-center gap-4 rounded-xl border border-[#EAECF0] bg-white px-4 py-3 transition-colors hover:border-[#D9B66D] hover:bg-[#FFFEFB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
     >
       <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#F3F4F6] text-[#475467] transition-colors group-hover:bg-[#F8F4E9] group-hover:text-[#785B1F]">
@@ -168,13 +170,24 @@ function PreviewLink({
   );
 }
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    primaryTransferred?: string;
+    invitationAccepted?: string;
+  }>;
+}) {
   await connection();
   const access = await getAdminAccess();
 
   if (access.status === "unauthenticated") redirect("/admin/login");
   if (access.status === "forbidden")
     redirect("/admin/login?error=not_admin");
+
+  const params = await searchParams;
+  const primaryTransferred = params.primaryTransferred === "1";
+  const invitationAccepted = params.invitationAccepted === "1";
 
   return (
     <AdminWorkspace activeSection="overview">
@@ -195,6 +208,26 @@ export default async function AdminPage() {
             Authorized session
           </span>
         </div>
+
+        {invitationAccepted && (
+          <AdminNotice
+            message="Welcome. Your administrator invitation is accepted and your standard access is active."
+            kind="success"
+            resetKey="invitationAccepted"
+            clearQueryParams={{ invitationAccepted: "1" }}
+            className="mb-5"
+          />
+        )}
+
+        {primaryTransferred && (
+          <AdminNotice
+            message="Primary role transferred successfully. The new primary administrator now holds the seat."
+            kind="success"
+            resetKey="primaryTransferred"
+            clearQueryParams={{ primaryTransferred: "1" }}
+            className="mb-5"
+          />
+        )}
 
         <section className="relative isolate overflow-hidden rounded-2xl bg-[#101B33] px-6 py-7 shadow-[0_12px_32px_rgba(16,27,51,0.12)] sm:px-8 sm:py-9">
           <div
@@ -303,6 +336,22 @@ export default async function AdminPage() {
                 detail="Preview the public introduction"
                 icon="overview"
               />
+              {access.role === "primary" && (
+                <PreviewLink
+                  href="/admin/invitations"
+                  label="Administrator invitations"
+                  detail="Invite standard admins and manage access"
+                  icon="departments"
+                />
+              )}
+              {access.role === "primary" && (
+                <PreviewLink
+                  href="/admin/primary-transfer"
+                  label="Primary role transfer"
+                  detail="Hand the primary seat to another administrator"
+                  icon="departments"
+                />
+              )}
             </div>
           </div>
 

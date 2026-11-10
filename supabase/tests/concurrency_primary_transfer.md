@@ -1,0 +1,201 @@
+-- VictoryCity M1.1 two-session transfer concurrency tests (manual, two psql sessions).
+--
+-- This file is documentation, not a script: paste each CASE block into two
+-- psql sessions in the order given. Do not execute this file as a whole.
+--
+-- WHY THIS IS NOT IN THE pgTAP SUITE: pgTAP runs in one session. Driving a
+-- second session would need dblink/postgres_fdw, and this repository installs
+-- no extensions. Everything here is therefore a documented two-session run,
+-- exactly like concurrency_primary_guard.md.
+--
+-- PREREQUISITES (local only, never production)
+--   Session A: psql "<direct-db-url-from-supabase-status>"   (NOT the pooler URL)
+--   Session B: psql "<direct-db-url-from-supabase-status>"   (same URL, second connection)
+--   Both sessions: SET application_name to 'm11-test-A' / 'm11-test-B' for lock tracing.
+--
+--   Cases T1 and T5 need only the M1.1 migration. Cases T2, T3 and T4 need the
+--   at-least-one guard ACTIVE (supabase/manual/activate_primary_guard.sql). On a
+--   pre-guard database, record T2/T3/T4 as SKIP with the reason.
+--
+-- SETUP (run once, either session; a scratch database only)
+--   insert into auth.users (id) values
+--     ('15000000-0000-0000-0000-000000000001'),  -- P0 (bootstrap this one primary first)
+--     ('15000000-0000-0000-0000-000000000002'),  -- S1
+--     ('15000000-0000-0000-0000-000000000003'),  -- S2
+--     ('15000000-0000-0000-0000-000000000004');  -- S3
+--   Follow supabase/manual/bootstrap_primary.sql with <TARGET_UUID> =
+--   15000000-0000-0000-0000-000000000001, then activate the guard.
+--
+--   Enroll the standard admins (bootstrap only promotes P0):
+--   insert into public.admin_users (user_id, role, is_active) values
+--     ('15000000-0000-0000-0000-000000000002', 'standard', true),
+--     ('15000000-0000-0000-0000-000000000003', 'standard', true),
+--     ('15000000-0000-0000-0000-000000000004', 'standard', true);
+--
+--   Verify before starting (expect 4 rows, count(active primary)=1, id=P0):
+--   select user_id, role, is_active from public.admin_users order by user_id;
+--   select count(*) filter (where role='primary' and is_active) as active_primaries,
+--          max(user_id) filter (where role='primary' and is_active) as primary_id
+--     from public.admin_users;
+--
+-- CALLER IDENTITY IN psql
+--   Operator sessions have no JWT, so auth.uid() is null and every call fails
+--   with PRIMARY_TRANSFER_UNAUTHENTICATED. Each case below impersonates the
+--   initiating primary for ONE transaction with:
+--     select set_config('request.jwt.claims',
+--       '{"sub":"<CALLER_UUID>","role":"authenticated"}', true);
+--   `true` makes it transaction-local, so it disappears on COMMIT/ROLLBACK.
+--
+-- HOW TO RUN EACH CASE
+--   Paste the A-block into session A and the B-block into session B in the
+--   order given. "HOLD" means: execute the BEGIN..statement, leave the txn
+--   open, and wait. Observe blocking via:
+--     select pid, application_name, wait_event_type, wait_event, query
+--       from pg_stat_activity where datname = current_database();
+--   After each case: verify with the ASSERT block, then ROLLBACK or COMMIT as
+--   noted so the next case starts from count=1, id=P0.
+--
+-- CASE T1: two competing transfers from the same primary (S1 wins, S2 fenced).
+--   A: BEGIN;
+--      select set_config('request.jwt.claims',
+--        '{"sub":"15000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+--      select * from public.transfer_primary_admin(
+--        '15000000-0000-0000-0000-000000000002'::uuid);   -- P0 -> S1. HOLD txn open.
+--        Takes pg_advisory_xact_lock('victorycity_admin_primary_singleton'),
+--        demotes P0, promotes S1, writes the audit row, then holds the lock.
+--   B: BEGIN;
+--      select set_config('request.jwt.claims',
+--        '{"sub":"15000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+--      select * from public.transfer_primary_admin(
+--        '15000000-0000-0000-0000-000000000003'::uuid);   -- P0 -> S2: BLOCKS inside
+--        pg_advisory_xact_lock. No row is read or written yet.
+--   A: COMMIT;  -- succeeds: seat = S1, audit row 1 written, lock released.
+--   B: (unblocks) the RPC now re-reads the seat UNDER the lock, finds S1, and
+--        because the caller (P0) is no longer the active primary it raises
+--        ERROR P0001 'PRIMARY_TRANSFER_NOT_PRIMARY: caller is not the active
+--        primary'. B's transaction is now ABORTED: every further command in
+--        session B fails with "current transaction is aborted, commands ignored
+--        until end of transaction block" until a ROLLBACK is issued. The ERROR
+--        is the expected outcome, not a success.
+--   B: ROLLBACK;  -- mandatory. Discards the fenced transfer; changes nothing.
+--   ASSERT (either session):
+--     select count(*) filter (where role='primary' and is_active) as active_primaries,
+--            max(user_id) filter (where role='primary' and is_active) as primary_id
+--       from public.admin_users;      -- expect 1 AND S1
+--     select user_id, role, is_active from public.admin_users order by user_id;
+--       -- expect S1 primary/true, P0 standard/TRUE, S2 standard/true
+--     select count(*) from public.admin_primary_transfers;  -- expect exactly 1
+--   RESTORE before the next case (single transaction, guard stays active):
+--     begin;
+--     select set_config('request.jwt.claims',
+--       '{"sub":"15000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
+--     select * from public.transfer_primary_admin(
+--       '15000000-0000-0000-0000-000000000001'::uuid);   -- S1 -> P0
+--     commit;
+--   ASSERT: active_primaries = 1 AND primary_id = P0. The audit trail now has 2
+--   rows; that is expected and must not be deleted.
+--
+-- CASE T2: transfer racing a direct demotion of the primary (guard active).
+--   REQUIRES guard active. If guard not active, record SKIP with reason.
+--   A: BEGIN; UPDATE public.admin_users SET role='standard'
+--        WHERE user_id='15000000-0000-0000-0000-000000000001';  -- HOLD.
+--        Takes the advisory lock via lock_primary_mutation and leaves ZERO
+--        active primaries inside its transaction.
+--   B: BEGIN; set_config(... '{"sub":"<P0>", ...}', true);
+--      select * from public.transfer_primary_admin('<S1>');      -- BLOCKS on the lock.
+--   A: COMMIT;  -- guard active: expect ERROR P0001 PRIMARY_GUARD_ZERO from the
+--        deferred trigger. A is ABORTED, the seat is unchanged.
+--   A: ROLLBACK;  -- mandatory after the failed COMMIT.
+--   B: (unblocks) re-reads the seat, finds P0 still primary, and COMPLETES the
+--        transfer to S1.
+--   ASSERT: active_primaries = 1 AND primary_id = S1; audit has one new row.
+--   ON A PRE-GUARD DATABASE this case is different and must NOT be run as a
+--   safety test: A's COMMIT would succeed, the seat would be empty, and B would
+--   then fail with PRIMARY_TRANSFER_NO_ACTIVE_PRIMARY. That is exactly why the
+--   guard exists.
+--   RESTORE: transfer S1 -> P0 as in T1's restore block.
+--
+-- CASE T3: transfer racing Auth-cascade deletion of the primary (guard active).
+--   REQUIRES guard active. Scratch clone with fixture auth users only.
+--   B: BEGIN; DELETE FROM auth.users
+--        WHERE id='15000000-0000-0000-0000-000000000001';  -- HOLD.
+--        Cascades to admin_users; lock_primary_mutation fires on the child delete.
+--   A: BEGIN; set_config(... '{"sub":"<P0>", ...}', true);
+--      select * from public.transfer_primary_admin('<S1>');      -- BLOCKS.
+--   B: COMMIT;  -- expect ERROR P0001 PRIMARY_GUARD_ZERO; the whole transaction
+--        rolls back, INCLUDING the parent auth.users delete.
+--   B: ROLLBACK;  -- mandatory after the failed COMMIT.
+--   A: (unblocks) transfer completes to S1.
+--   ASSERT: auth.users P0 STILL EXISTS; admin_users P0 present and standard;
+--     active_primaries = 1 AND primary_id = S1.
+--   RESTORE: transfer S1 -> P0.
+--
+-- CASE T4: transfer racing the bootstrap script (same advisory key).
+--   Two orderings, both must end at exactly one active primary.
+--   (a) Transfer commits first:
+--       A: BEGIN; set_config(... P0 ...); select * from public.transfer_primary_admin('<S1>'); HOLD.
+--       B: run supabase/manual/bootstrap_primary.sql for <P0>  -- blocks on the
+--          advisory lock, then aborts with BOOTSTRAP_ACTIVE_PRIMARY_EXISTS once
+--          S1 holds the seat.
+--       A: COMMIT;  ASSERT: seat = S1, audit +1, bootstrap wrote nothing.
+--   (b) Bootstrap commits first:
+--       B: run the bootstrap write transaction for <P0> and COMMIT.
+--       A: set_config(... P0 ...); select * from public.transfer_primary_admin('<S1>');
+--          -- bootstrap promoted P0 again, so P0 is still the primary and the
+--          transfer SUCCEEDS. That is correct: P0 was re-verified as primary.
+--   ASSERT after each ordering: count(active primary) = 1, exactly one of
+--   {P0, S1} holds it, and the audit table has a row for every successful
+--   transfer and none for any aborted one.
+--   RESTORE: leave P0 as primary.
+--
+-- CASE T5: target deactivated concurrently (row lock, not the advisory key).
+--   Does not need the guard.
+--   A: BEGIN; UPDATE public.admin_users SET is_active=false, deactivated_at=now()
+--        WHERE user_id='15000000-0000-0000-0000-000000000002';  -- S1. HOLD.
+--        A standard->standard update does NOT take the advisory lock, so A holds
+--        only S1's row lock.
+--   B: BEGIN; set_config(... P0 ...);
+--      select * from public.transfer_primary_admin('<S1>');      -- takes the
+--        advisory lock, then BLOCKS on the FOR UPDATE of S1's row.
+--   A: COMMIT;  -- deactivation committed.
+--   B: (unblocks) FOR UPDATE re-reads the committed row, sees is_active = false,
+--        and raises ERROR P0001 'PRIMARY_TRANSFER_TARGET_INACTIVE: target is
+--        deactivated'. B is ABORTED.
+--   B: ROLLBACK;  -- mandatory.
+--   ASSERT: seat still P0 (active_primaries = 1, id = P0); S1 inactive;
+--     audit count unchanged. This case is the reason the RPC reads the target
+--     with FOR UPDATE: without it, the promotion could land on the row that
+--     was just deactivated and leave ZERO active primaries on a pre-guard
+--     database.
+--
+-- KNOWN LIMITATION (deadlock, not corruption)
+--   A direct UPDATE that touches the primary row takes that row lock BEFORE its
+--   BEFORE-trigger takes the advisory lock, while the transfer RPC takes the
+--   advisory lock FIRST and the row locks second. A pathological interleaving
+--   can therefore deadlock. Postgres detects it after deadlock_timeout (1s),
+--   aborts ONE of the two transactions, and the invariant still holds: the
+--   aborted side made no changes. Treat a 40P01 deadlock as a retryable
+--   outcome, not as a transfer failure. Do not "fix" it by removing the
+--   advisory lock.
+--
+-- TEARDOWN (after all cases pass; scratch database only)
+--   The at-least-one-primary guard stays ACTIVE throughout. Never disable or
+--   drop it for cleanup. P0 must remain the active primary; remove ONLY the
+--   S1/S2/S3 fixture rows and their Auth users:
+--   delete from public.admin_users
+--     where user_id in ('15000000-0000-0000-0000-000000000002',
+--                       '15000000-0000-0000-0000-000000000003',
+--                       '15000000-0000-0000-0000-000000000004');
+--   delete from auth.users
+--     where id in ('15000000-0000-0000-0000-000000000002',
+--                  '15000000-0000-0000-0000-000000000003',
+--                  '15000000-0000-0000-0000-000000000004');
+--   Note: public.admin_primary_transfers rows referencing those UUIDs are NOT
+--   deleted — the audit table has no foreign key to auth.users precisely so the
+--   trail survives offboarding. On a scratch database, clear them only with
+--   `truncate public.admin_primary_transfers;` and record that you did.
+--   FINAL VERIFICATION (guard still active): P0 is the only active primary.
+--   select count(*) filter (where role='primary' and is_active) as active_primaries,
+--          max(user_id) filter (where role='primary' and is_active) as primary_id
+--     from public.admin_users;
+--   expect active_primaries = 1 AND primary_id = P0.
