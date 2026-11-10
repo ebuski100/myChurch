@@ -23,47 +23,6 @@ const sections: {
   },
 ];
 
-// function MinistryMark({ dark = false }: { dark?: boolean }) {
-//   return (
-//     <Link
-//       href="/admin#overview"
-//       className="inline-flex items-center gap-3"
-//       aria-label="VictoryCity admin overview"
-//     >
-//       <span
-//         className={`grid size-10 place-items-center rounded-full border ${dark ? "border-white/20 bg-white/10 text-[#E6C77D]" : "border-[#D9B66D]/40 bg-[#D9B66D]/10 text-[#9A772E]"}`}
-//       >
-//         <svg
-//           aria-hidden="true"
-//           viewBox="0 0 24 24"
-//           fill="none"
-//           className="size-5"
-//         >
-//           <path
-//             d="M12 3v18M5 9h14M7 17l5-5 5 5"
-//             stroke="currentColor"
-//             strokeWidth="1.5"
-//             strokeLinecap="round"
-//             strokeLinejoin="round"
-//           />
-//         </svg>
-//       </span>
-//       <span className="leading-tight">
-//         <span
-//           className={`block text-sm font-semibold tracking-wide ${dark ? "text-white" : "text-[#101B33]"}`}
-//         >
-//           VictoryCity
-//         </span>
-//         <span
-//           className={`mt-1 block text-[10px] font-medium uppercase tracking-[0.16em] ${dark ? "text-white/55" : "text-[#667085]"}`}
-//         >
-//           Admin workspace
-//         </span>
-//       </span>
-//     </Link>
-//   );
-// }
-
 function MinistryMark({ dark = false }: { dark?: boolean }) {
   return (
     <div className="flex items-center gap-3">

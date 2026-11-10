@@ -111,6 +111,18 @@ function logSignInFailure(
   });
 }
 
+function logSignInOutcome(
+  success: boolean,
+  userIdReturned: boolean,
+  redirect: string,
+) {
+  console.info("[admin-auth] sign_in_outcome", {
+    success,
+    userIdReturned,
+    redirect,
+  });
+}
+
 export async function signInAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -127,16 +139,22 @@ export async function signInAction(formData: FormData) {
 
   if (!email || !password) {
     logSignInFailure("form_validation", "missing_credentials");
+    logSignInOutcome(false, false, "/admin/login?error=invalid");
     redirect("/admin/login?error=invalid");
   }
 
-  const supabase = await createSupabaseAuthServerClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const supabase = await createSupabaseAuthServerClient({ writable: true });
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
+    logSignInOutcome(
+      false,
+      false,
+      "/admin/login?error=invalid",
+    );
     logSignInFailure(
       "password_auth",
       "supabase_auth_rejected",
@@ -145,5 +163,10 @@ export async function signInAction(formData: FormData) {
     redirect("/admin/login?error=invalid");
   }
 
+  logSignInOutcome(
+    true,
+    Boolean(data.user?.id),
+    afterSignIn === "/admin" ? "/admin" : "/admin/invitations/accept",
+  );
   redirect(afterSignIn);
 }

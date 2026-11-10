@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const supabase = await createSupabaseAuthServerClient();
+  const supabase = await createSupabaseAuthServerClient({ writable: true });
 
   const { error } = await supabase.auth.setSession({
     access_token: accessToken,

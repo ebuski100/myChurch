@@ -224,7 +224,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getAdminAccess } from "@/lib/admin-auth";
+import { getAdminAccess, getAuthenticatedUser } from "@/lib/admin-auth";
 import {
   decideInvitationAccess,
   generateInvitationToken,
@@ -474,6 +474,13 @@ export async function acceptInvitationAction(
 
   if (!token.ok) {
     return { message: invitationFailureMessage("invalid_token") };
+  }
+
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    redirect(
+      `/admin/login?invitationToken=${encodeURIComponent(token.token)}`,
+    );
   }
 
   const accepted = await acceptManagedInvitation(

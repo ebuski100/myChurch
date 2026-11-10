@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAdminAccess } from "@/lib/admin-auth";
-import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
+import { getAdminAccess, getAuthenticatedUser } from "@/lib/admin-auth";
 import { validateInvitationToken } from "@/lib/admin-invitations";
 import { acceptInvitationAction } from "../actions";
 import { AcceptInvitationForm } from "./accept-form";
@@ -84,10 +83,8 @@ export default async function AcceptInvitationPage({
     // action resolves by enrolling the caller.
   }
 
-  const { data } = await createSupabaseAuthServerClient().then(
-    async (supabase) => supabase.auth.getUser(),
-  );
-  const email = data.user?.email ?? "your account";
+  const user = await getAuthenticatedUser();
+  const email = user?.email ?? "your account";
 
   if (access.status === "authorized") {
     return (

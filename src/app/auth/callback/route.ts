@@ -120,7 +120,7 @@ export async function GET(request: Request) {
   const forward = buildSetupForwardUrl(next, validatedToken);
   const isPasswordRecovery = next === "/admin/reset-password";
 
-  const supabase = await createSupabaseAuthServerClient();
+  const supabase = await createSupabaseAuthServerClient({ writable: true });
 
   if (
     params.get("error") ||

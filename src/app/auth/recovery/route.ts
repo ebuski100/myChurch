@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
 
 export async function GET() {
-  const supabase = await createSupabaseAuthServerClient();
+  const supabase = await createSupabaseAuthServerClient({ writable: true });
 
   const {
     data: { user },

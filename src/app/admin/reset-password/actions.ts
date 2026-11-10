@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
+import { getAdminAccess } from "@/lib/admin-auth";
 import type { ResetPasswordActionState } from "@/lib/admin-password-recovery";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -29,39 +30,22 @@ export async function resetAdminPasswordAction(
     };
   }
 
-  const supabase = await createSupabaseAuthServerClient();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
+  const access = await getAdminAccess();
+  if (access.status === "unauthenticated") {
     return {
       message:
         "Your password-reset session has expired. Request a new reset link.",
     };
   }
 
-  const { data: admin, error: adminError } = await supabase
-    .from("admin_users")
-    .select("user_id, role, is_active")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (
-    adminError ||
-    !admin ||
-    admin.user_id !== user.id ||
-    admin.is_active !== true ||
-    !["primary", "standard"].includes(admin.role)
-  ) {
+  if (access.status !== "authorized") {
     return {
       message:
         "This account is not authorized to reset an administrator password.",
     };
   }
 
+  const supabase = await createSupabaseAuthServerClient({ writable: true });
   const { error: updateError } = await supabase.auth.updateUser({
     password,
   });

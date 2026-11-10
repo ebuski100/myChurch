@@ -1,49 +1,3 @@
-// import "server-only";
-
-// import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
-// import { decideAdminAccess, type AdminRole } from "@/lib/admin-authorization";
-
-// type AdminUserRow = {
-//   user_id: string;
-//   role: string;
-//   is_active: boolean;
-// };
-
-// export async function getAdminAccess() {
-//   const supabase = await createSupabaseAuthServerClient();
-//   const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-//   if (!user) return decideAdminAccess(null, null);
-//   if (authError) {
-//     throw new Error("Administrator identity could not be verified.");
-//   }
-
-//   const { data: adminRecord, error } = await supabase
-//     .from("admin_users")
-//     .select("user_id, role, is_active")
-//     .eq("user_id", user.id)
-//     .maybeSingle();
-
-//   if (error) {
-//     throw new Error("Administrator access could not be verified.");
-//   }
-
-//   const row = adminRecord as AdminUserRow | null;
-
-//   return decideAdminAccess(
-//     user.id,
-//     row
-//       ? {
-//           userId: row.user_id,
-//           role: row.role as AdminRole,
-//           // Strict comparison: a missing or null value is treated as inactive,
-//           // so an unexpected column shape fails closed.
-//           isActive: row.is_active === true,
-//         }
-//       : null,
-//   );
-// }
-
 import "server-only";
 
 import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
@@ -51,6 +5,7 @@ import {
   decideAdminAccess,
   type AdminRole,
 } from "@/lib/admin-authorization";
+import { getVerifiedUserOrThrow } from "@/lib/supabase/auth-user-result";
 
 type AdminUserRow = {
   user_id: string;
@@ -58,27 +13,28 @@ type AdminUserRow = {
   is_active: boolean;
 };
 
-export async function getAdminAccess() {
+async function getAuthenticatedContext() {
   const supabase = await createSupabaseAuthServerClient();
+  const { data, error } = await supabase.auth.getUser();
+  const user = getVerifiedUserOrThrow(data.user, error);
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  return { supabase, user };
+}
 
-  if (authError) {
-    if (
-      authError.name === "AuthSessionMissingError" ||
-      authError.code === "refresh_token_already_used"
-    ) {
-      return decideAdminAccess(null, null);
-    }
+export async function getAuthenticatedUser() {
+  return (await getAuthenticatedContext()).user;
+}
 
-    throw new Error("Administrator identity could not be verified.");
-  }
-
+export async function getAdminAccess() {
+  const { supabase, user } = await getAuthenticatedContext();
   if (!user) {
-    return decideAdminAccess(null, null);
+    const decision = decideAdminAccess(null, null);
+    console.info("[admin-auth] Access decision.", {
+      operation: "admin_authorization",
+      result: decision.status,
+      authenticatedUserPresent: false,
+    });
+    return decision;
   }
 
   const { data: adminRecord, error } = await supabase
@@ -88,12 +44,14 @@ export async function getAdminAccess() {
     .maybeSingle();
 
   if (error) {
-    throw new Error("Administrator access could not be verified.");
+    throw new Error("Administrator access could not be verified.", {
+      cause: error,
+    });
   }
 
   const row = adminRecord as AdminUserRow | null;
 
-  return decideAdminAccess(
+  const decision = decideAdminAccess(
     user.id,
     row
       ? {
@@ -103,4 +61,12 @@ export async function getAdminAccess() {
         }
       : null,
   );
+  console.info("[admin-auth] Access decision.", {
+    operation: "admin_authorization",
+    result: decision.status,
+    authenticatedUserPresent: true,
+    activeAdminRecordFound: Boolean(row),
+    activeAdminRecord: row?.is_active === true,
+  });
+  return decision;
 }

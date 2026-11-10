@@ -3,10 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { getAdminAccess } from "@/lib/admin-auth";
-import {
-  getPrimaryTransferCandidates,
-  getPrimaryTransferHistory,
-} from "@/lib/admin-primary-data";
+import { getPrimaryTransferPageData } from "@/lib/admin-primary-data";
 import { decidePrimaryTransferAccess } from "@/lib/primary-transfer";
 import { AdminWorkspace } from "../admin-shell";
 import { transferPrimaryAdminAction } from "./actions";
@@ -88,10 +85,8 @@ export default async function PrimaryTransferPage() {
     );
   }
 
-  const [candidatesResult, historyResult] = await Promise.all([
-    getPrimaryTransferCandidates(),
-    getPrimaryTransferHistory(10),
-  ]);
+  const { candidates: candidatesResult, history: historyResult } =
+    await getPrimaryTransferPageData(10);
 
   return (
     <AdminWorkspace activeSection="overview">

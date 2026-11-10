@@ -78,7 +78,7 @@ export async function requestPasswordResetAction(formData: FormData) {
 
     callback.searchParams.set("next", "/admin/reset-password");
 
-    const supabase = await createSupabaseAuthServerClient();
+    const supabase = await createSupabaseAuthServerClient({ writable: true });
 
     const { error } = await supabase.auth.resetPasswordForEmail(
       email,

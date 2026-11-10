@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabaseCookieOptions } from "@/lib/supabase/cookie-options";
 
 function getSupabaseAuthConfig() {
   const url = process.env.SUPABASE_URL;
@@ -12,39 +13,49 @@ function getSupabaseAuthConfig() {
   return { url, publishableKey };
 }
 
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-};
-
 export async function refreshSupabaseAuthSession(request: NextRequest) {
   const { url, publishableKey } = getSupabaseAuthConfig();
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(url, publishableKey, {
-    cookieOptions,
+    cookieOptions: supabaseCookieOptions,
     cookies: {
       getAll() {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet, headers) {
-        cookiesToSet.forEach(({ name, value }) => {
+        for (const { name, value } of cookiesToSet) {
           request.cookies.set(name, value);
-        });
+        }
 
         response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
+        for (const { name, value, options } of cookiesToSet) {
           response.cookies.set(name, value, options);
-        });
-        Object.entries(headers).forEach(([name, value]) => {
+        }
+        for (const [name, value] of Object.entries(headers)) {
           response.headers.set(name, value);
-        });
+        }
       },
     },
   });
 
-  await supabase.auth.getClaims();
+  const { error } = await supabase.auth.getClaims();
+  if (error) {
+    console.warn("[supabase-auth] Proxy session validation failed.", {
+      code:
+        typeof error.code === "string" &&
+        /^[A-Za-z0-9_.-]{1,64}$/.test(error.code)
+          ? error.code
+          : null,
+      status:
+        typeof error.status === "number" &&
+        Number.isInteger(error.status) &&
+        error.status >= 400 &&
+        error.status <= 599
+          ? error.status
+          : null,
+    });
+  }
+
   return response;
 }

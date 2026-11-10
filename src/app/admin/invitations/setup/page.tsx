@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAdminAccess } from "@/lib/admin-auth";
-import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
+import { getAdminAccess, getAuthenticatedUser } from "@/lib/admin-auth";
 import { validateInvitationToken } from "@/lib/admin-invitations";
 import { buildConfirmErrorUrl } from "@/lib/admin-invite-setup";
 import { setupInvitationAction, setupSignOutAction } from "./actions";
@@ -84,10 +83,8 @@ export default async function InvitationSetupPage({
     redirect("/admin?invitationAccepted=1");
   }
 
-  const { data } = await createSupabaseAuthServerClient().then(
-    async (supabase) => supabase.auth.getUser(),
-  );
-  const email = data.user?.email;
+  const user = await getAuthenticatedUser();
+  const email = user?.email;
 
   if (!email) {
     redirect(buildConfirmErrorUrl("session_expired", token.token));

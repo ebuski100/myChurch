@@ -32,11 +32,16 @@ export async function setupInvitationAction(
     return { message: setupFailureMessage("invalid_token") };
   }
 
-  const supabase = await createSupabaseAuthServerClient();
+  const supabase = await createSupabaseAuthServerClient({ writable: true });
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
-
+  if (authError) {
+    throw new Error("Invitation setup identity could not be verified.", {
+      cause: authError,
+    });
+  }
   if (!user) {
     redirect(buildConfirmErrorUrl("session_expired", token.token));
   }
@@ -76,7 +81,7 @@ export async function setupInvitationAction(
 }
 
 export async function setupSignOutAction() {
-  const supabase = await createSupabaseAuthServerClient();
+  const supabase = await createSupabaseAuthServerClient({ writable: true });
   await supabase.auth.signOut();
   redirect("/admin/login");
 }
