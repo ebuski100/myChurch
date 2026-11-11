@@ -34,7 +34,11 @@ function shortId(value: string): string {
 function Breadcrumb() {
   return (
     <div className="mb-7 flex items-center gap-2 text-xs text-[#98A2B3]">
-      <Link href="/admin" prefetch={false} className="hover:text-[#101B33]">
+      <Link
+        href="/admin"
+        prefetch={false}
+        className="hover:text-[#101B33]"
+      >
         Admin
       </Link>
       <span aria-hidden="true">/</span>

@@ -18,7 +18,8 @@ import { InvitationList } from "./invitation-list";
 import { StandardAdminList } from "./standard-admin-list";
 
 export const metadata: Metadata = {
-  title: "Administrator invitations | Admin | VictoryCity Revival Ministry",
+  title:
+    "Administrator invitations | Admin | VictoryCity Revival Ministry",
   robots: { index: false, follow: false },
 };
 
@@ -27,7 +28,11 @@ export const instant = false;
 function Breadcrumb() {
   return (
     <div className="mb-7 flex items-center gap-2 text-xs text-[#98A2B3]">
-      <Link href="/admin" prefetch={false} className="hover:text-[#101B33]">
+      <Link
+        href="/admin"
+        prefetch={false}
+        className="hover:text-[#101B33]"
+      >
         Admin
       </Link>
       <span aria-hidden="true">/</span>
@@ -224,8 +229,8 @@ export default async function InvitationsPage({
               role="status"
               className="rounded-xl border border-[#F2D7A1] bg-[#FFF9EC] px-4 py-3 text-sm leading-6 text-[#77591F]"
             >
-              The administrator list could not be loaded. Try again
-              in a moment — nothing has changed.
+              The administrator list could not be loaded. Try again in
+              a moment — nothing has changed.
             </p>
           ) : (
             <StandardAdminList
