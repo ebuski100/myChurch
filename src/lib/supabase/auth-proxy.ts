@@ -13,7 +13,9 @@ function getSupabaseAuthConfig() {
   return { url, publishableKey };
 }
 
-export async function refreshSupabaseAuthSession(request: NextRequest) {
+export async function refreshSupabaseAuthSession(
+  request: NextRequest,
+) {
   const { url, publishableKey } = getSupabaseAuthConfig();
   let response = NextResponse.next({ request });
 
@@ -40,8 +42,27 @@ export async function refreshSupabaseAuthSession(request: NextRequest) {
   });
 
   const { error } = await supabase.auth.getClaims();
+  // if (error) {
+  //   console.warn("[supabase-auth] Proxy session validation failed.", {
+  //     code:
+  //       typeof error.code === "string" &&
+  //       /^[A-Za-z0-9_.-]{1,64}$/.test(error.code)
+  //         ? error.code
+  //         : null,
+  //     status:
+  //       typeof error.status === "number" &&
+  //       Number.isInteger(error.status) &&
+  //       error.status >= 400 &&
+  //       error.status <= 599
+  //         ? error.status
+  //         : null,
+  //   });
+  // }
+
   if (error) {
     console.warn("[supabase-auth] Proxy session validation failed.", {
+      name: error.name,
+      message: error.message,
       code:
         typeof error.code === "string" &&
         /^[A-Za-z0-9_.-]{1,64}$/.test(error.code)

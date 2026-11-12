@@ -347,30 +347,6 @@ export async function reactivateManagedAdmin(
   }
 }
 
-// export async function sendAdminInviteEmail(
-//   email: string,
-//   token: string,
-//   siteUrl: string,
-// ): Promise<InviteEmailResult> {
-//   try {
-//     const supabase = createSupabaseStorageServerClient();
-//     const redirectTo = buildInviteCallbackUrl(siteUrl, token);
-
-//     const { error } = await supabase.auth.admin.inviteUserByEmail(
-//       email,
-//       {
-//         redirectTo,
-//       },
-//     );
-
-//     if (error) return { kind: "error" };
-
-//     return { kind: "success" };
-//   } catch {
-//     return { kind: "error" };
-//   }
-// }
-
 export type InviteEmailResult =
   | { kind: "success" }
   | { kind: "error" };
@@ -380,30 +356,81 @@ export async function sendAdminInviteEmail(
   token: string,
   siteUrl: string,
 ): Promise<InviteEmailResult> {
+  const supabase = createSupabaseStorageServerClient();
+  const redirectTo = buildInviteCallbackUrl(siteUrl, token);
+
   try {
-    const supabase = createSupabaseStorageServerClient();
-    const redirectTo = buildInviteCallbackUrl(siteUrl, token);
+    // First try the normal invitation flow. This creates a new Auth user.
+    const { error: inviteError } =
+      await supabase.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+      });
 
-    const { error } = await supabase.auth.admin.inviteUserByEmail(
-      email,
-      { redirectTo },
-    );
+    if (!inviteError) {
+      return { kind: "success" };
+    }
 
-    if (error) {
-      console.error(
-        "[admin-invitation] Supabase email delivery failed:",
-        {
-          name: error.name,
-          code: error.code,
-          status: error.status,
-          message: error.message,
-        },
-      );
+    // Only an existing Auth account should use the alternative flow.
+    if (
+      inviteError.code !== "email_exists" &&
+      inviteError.code !== "user_already_exists"
+    ) {
+      console.error("[admin-invitation] Invite delivery failed:", {
+        code: inviteError.code,
+        message: inviteError.message,
+      });
 
       return { kind: "error" };
     }
 
-    return { kind: "success" };
+    // Existing Auth account: send a magic link without creating
+    // another Auth user.
+    const { error: magicLinkError } =
+      await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: redirectTo,
+        },
+      });
+
+    if (!magicLinkError) {
+      return { kind: "success" };
+    }
+
+    // If the existing account has not verified its email yet,
+    // resend its signup confirmation instead.
+    if (magicLinkError.code === "email_not_confirmed") {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      });
+
+      if (!resendError) {
+        return { kind: "success" };
+      }
+
+      console.error(
+        "[admin-invitation] Signup confirmation resend failed:",
+        {
+          code: resendError.code,
+          message: resendError.message,
+        },
+      );
+    }
+
+    console.error(
+      "[admin-invitation] Existing-account email failed:",
+      {
+        code: magicLinkError.code,
+        message: magicLinkError.message,
+      },
+    );
+
+    return { kind: "error" };
   } catch (error) {
     console.error("[admin-invitation] Email delivery exception:", {
       message:
@@ -415,3 +442,44 @@ export async function sendAdminInviteEmail(
     return { kind: "error" };
   }
 }
+
+// export async function sendAdminInviteEmail(
+//   email: string,
+//   token: string,
+//   siteUrl: string,
+// ): Promise<InviteEmailResult> {
+//   try {
+//     const supabase = createSupabaseStorageServerClient();
+//     const redirectTo = buildInviteCallbackUrl(siteUrl, token);
+
+//     const { error } = await supabase.auth.admin.inviteUserByEmail(
+//       email,
+//       { redirectTo },
+//     );
+
+//     if (error) {
+//       console.error(
+//         "[admin-invitation] Supabase email delivery failed:",
+//         {
+//           name: error.name,
+//           code: error.code,
+//           status: error.status,
+//           message: error.message,
+//         },
+//       );
+
+//       return { kind: "error" };
+//     }
+
+//     return { kind: "success" };
+//   } catch (error) {
+//     console.error("[admin-invitation] Email delivery exception:", {
+//       message:
+//         error instanceof Error
+//           ? error.message
+//           : "Unknown server error",
+//     });
+
+//     return { kind: "error" };
+//   }
+// }
