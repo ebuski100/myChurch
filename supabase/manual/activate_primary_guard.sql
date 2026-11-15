@@ -46,6 +46,7 @@ end $$;
 create or replace function public.check_primary_retained()
 returns trigger
 language plpgsql
+security definer
 set search_path = ''
 as $fn$
 begin
