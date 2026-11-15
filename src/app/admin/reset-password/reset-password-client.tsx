@@ -68,7 +68,7 @@ export default function ResetPasswordClient({
           );
         }
 
-        const response = await fetch("/auth/recovery/session", {
+        const response = await fetch("/auth/recovery", {
           cache: "no-store",
         });
 
@@ -113,7 +113,7 @@ export default function ResetPasswordClient({
             role="status"
             className="mt-4 text-sm leading-6 text-[#737985]"
           >
-            Verifying your password-reset link…
+            Verifying your recovery session…
           </p>
         )}
 
@@ -123,15 +123,15 @@ export default function ResetPasswordClient({
               role="alert"
               className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800"
             >
-              This password-reset link is invalid, expired, or has
-              already been used. Request a new link to continue.
+              This recovery session is invalid or has expired. Request a
+              new recovery code to continue.
             </p>
 
             <Link
               href="/admin/forgot-password"
               className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white"
             >
-              Request another reset link
+              Request another recovery code
             </Link>
           </div>
         )}

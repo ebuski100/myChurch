@@ -13,8 +13,12 @@ type AdminUserRow = {
   is_active: boolean;
 };
 
-async function getAuthenticatedContext() {
-  const supabase = await createSupabaseAuthServerClient();
+async function getAuthenticatedContext({
+  writable = false,
+}: {
+  writable?: boolean;
+} = {}) {
+  const supabase = await createSupabaseAuthServerClient({ writable });
   const { data, error } = await supabase.auth.getUser();
   const user = getVerifiedUserOrThrow(data.user, error);
 
@@ -25,8 +29,10 @@ export async function getAuthenticatedUser() {
   return (await getAuthenticatedContext()).user;
 }
 
-export async function getAdminAccess() {
-  const { supabase, user } = await getAuthenticatedContext();
+export async function getAdminAccessContext(
+  options: { writable?: boolean } = {},
+) {
+  const { supabase, user } = await getAuthenticatedContext(options);
   if (!user) {
     const decision = decideAdminAccess(null, null);
     console.info("[admin-auth] Access decision.", {
@@ -34,7 +40,7 @@ export async function getAdminAccess() {
       result: decision.status,
       authenticatedUserPresent: false,
     });
-    return decision;
+    return { supabase, access: decision };
   }
 
   const { data: adminRecord, error } = await supabase
@@ -68,5 +74,10 @@ export async function getAdminAccess() {
     activeAdminRecordFound: Boolean(row),
     activeAdminRecord: row?.is_active === true,
   });
-  return decision;
+  return { supabase, access: decision };
+}
+
+export async function getAdminAccess() {
+  const { access } = await getAdminAccessContext();
+  return access;
 }

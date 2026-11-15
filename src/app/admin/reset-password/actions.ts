@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
-import { getAdminAccess } from "@/lib/admin-auth";
+import { getAdminAccessContext } from "@/lib/admin-auth";
+import { sanitizeAuthErrorMessage } from "@/lib/admin-password-recovery";
 import type { ResetPasswordActionState } from "@/lib/admin-password-recovery";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -30,11 +30,13 @@ export async function resetAdminPasswordAction(
     };
   }
 
-  const access = await getAdminAccess();
+  const { supabase, access } = await getAdminAccessContext({
+    writable: true,
+  });
   if (access.status === "unauthenticated") {
     return {
       message:
-        "Your password-reset session has expired. Request a new reset link.",
+        "Your password-reset session has expired. Request a new recovery code.",
     };
   }
 
@@ -45,12 +47,34 @@ export async function resetAdminPasswordAction(
     };
   }
 
-  const supabase = await createSupabaseAuthServerClient({ writable: true });
   const { error: updateError } = await supabase.auth.updateUser({
     password,
   });
 
   if (updateError) {
+    const code =
+      typeof updateError.code === "string" &&
+      /^[a-zA-Z0-9_.-]{1,64}$/.test(updateError.code)
+        ? updateError.code
+        : undefined;
+    const status =
+      typeof updateError.status === "number" &&
+      Number.isInteger(updateError.status) &&
+      updateError.status >= 400 &&
+      updateError.status <= 599
+        ? updateError.status
+        : undefined;
+    const message = sanitizeAuthErrorMessage(
+      updateError.message,
+      password,
+    );
+
+    console.error("[admin-auth] password_update_failed", {
+      ...(code ? { code } : {}),
+      ...(status ? { status } : {}),
+      ...(message ? { message } : {}),
+    });
+
     return {
       message:
         "Your password could not be updated. Check the password requirements and try again.",
