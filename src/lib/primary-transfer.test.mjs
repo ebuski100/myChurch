@@ -6,6 +6,8 @@ const {
   validateTransferTarget,
   transferFailureReasonFromError,
   transferFailureMessage,
+  shapePrimaryTransferHistory,
+  formatPrimaryTransferIdentity,
 } = await import(new URL("./primary-transfer.ts", import.meta.url).href);
 
 // Realistic Auth user ids: the validation follows the project's existing
@@ -74,6 +76,56 @@ test("accepts another administrator and normalises the id", () => {
     ok: true,
     targetUserId: standardId,
   });
+});
+
+test("shapes transfer history with email identities and nullable deleted accounts", () => {
+  assert.deepEqual(
+    shapePrimaryTransferHistory([
+      {
+        id: "transfer-1",
+        previous_primary_email: " old@example.test ",
+        new_primary_email: "new@example.test",
+        transferred_at: "2026-11-16T00:00:00Z",
+      },
+      {
+        id: "transfer-2",
+        previous_primary_email: null,
+        new_primary_email: "",
+        transferred_at: "2026-11-16T00:01:00Z",
+      },
+      { id: "malformed", previous_primary_email: "ignored@example.test" },
+      null,
+    ]),
+    [
+      {
+        id: "transfer-1",
+        previousPrimaryEmail: "old@example.test",
+        newPrimaryEmail: "new@example.test",
+        transferredAt: "2026-11-16T00:00:00Z",
+      },
+      {
+        id: "transfer-2",
+        previousPrimaryEmail: null,
+        newPrimaryEmail: null,
+        transferredAt: "2026-11-16T00:01:00Z",
+      },
+    ],
+  );
+});
+
+test("displays resolved emails and a readable fallback for missing identities", () => {
+  assert.equal(
+    formatPrimaryTransferIdentity("admin@example.test"),
+    "admin@example.test",
+  );
+  assert.equal(
+    formatPrimaryTransferIdentity(null),
+    "Administrator identity unavailable",
+  );
+  assert.equal(
+    formatPrimaryTransferIdentity("  "),
+    "Administrator identity unavailable",
+  );
 });
 
 test("maps every RPC failure prefix to a reason", () => {

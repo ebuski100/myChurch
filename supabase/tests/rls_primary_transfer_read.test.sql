@@ -1,15 +1,17 @@
--- VictoryCity M1.1 read-side authorization tests (G1 + G2).
+-- VictoryCity primary-transfer read-side authorization tests (G1 + G2 + G3).
 --
 -- Run with (local only, after `supabase db reset`):
 --   npx.cmd supabase db query --local --file supabase/tests/rls_primary_transfer_read.test.sql
 --
--- Scope: the two READ surfaces of the primary-transfer feature, which the
+-- Scope: the READ surfaces of the primary-transfer feature, which the
 -- write-side suite (rls_primary_transfer.test.sql) does not cover:
 --
 --   G1. public.list_primary_transfer_candidates()
 --       (20261101000200_admin_primary_transfer_read.sql)
 --   G2. the admin_primary_transfers audit table's read policy
 --       (20261101000100_admin_primary_transfer.sql)
+--   G3. public.list_primary_transfer_history()
+--       (20261116000100_admin_primary_transfer_history_identities.sql)
 --
 -- Everything runs inside one transaction and is rolled back at the end, so no
 -- row survives the run. No migration, no bootstrap, no guard activation.
@@ -24,14 +26,9 @@
 --   anon additionally has no EXECUTE privilege at all (revoked in the
 --   migration), so it cannot call the function even to receive zero rows.
 --
---   Audit trail. The policy comment states "Read access for ACTIVE
---   administrators only", and src/lib/admin-primary-data.ts repeats that any
---   ACTIVE administrator may read the history. A STANDARD administrator
---   reading the trail is therefore INTENDED, not an oversight: it is the
---   documented policy, and assertion 15 pins that behaviour so a future
---   tightening is a deliberate, visible change rather than an accident.
---   Inactive administrators and non-administrators see zero rows; anon has no
---   SELECT privilege at all.
+--   Audit trail. The existing table policy allows any active administrator to
+--   read UUID-only audit rows. The new history RPC returns administrator
+--   emails, so it is narrower: only the active primary may call it.
 --
 -- WHY anon IS ASSERTED VIA PRIVILEGE, NOT BY SWITCHING ROLE: anon also lacks
 -- EXECUTE on the pgTAP functions themselves, so `set local role anon` would
@@ -46,7 +43,7 @@
 
 begin;
 
-select plan(20);
+select plan(30);
 
 -- Precondition: empty admin_users (disposable database). ---------------------
 select is(
@@ -63,7 +60,7 @@ select is(
 -- legal: admin_users_single_active_primary is a partial index over
 -- (role = 'primary' and is_active) only.
 insert into auth.users (id, email) values
-  ('18000000-0000-0000-0000-000000000001', null),
+  ('18000000-0000-0000-0000-000000000001', 'p0@fixture.invalid'),
   ('18000000-0000-0000-0000-000000000002', 's1@fixture.invalid'),
   ('18000000-0000-0000-0000-000000000003', 's3@fixture.invalid'),
   ('18000000-0000-0000-0000-000000000004', null),
@@ -81,7 +78,7 @@ values
   ('18000000-0000-0000-0000-000000000005', 'primary',  false, now(),
    '18000000-0000-0000-0000-000000000001');
 
--- Two audit rows, written here as the table owner because only the SECURITY
+-- Three audit rows, written here as the table owner because only the SECURITY
 -- DEFINER RPC may insert at runtime (asserted by the write-side suite). They
 -- are fixtures for the read policy, not a bypass of the design.
 insert into public.admin_primary_transfers
@@ -94,7 +91,13 @@ values
   ('18000000-0000-0000-0000-000000000002',
    '18000000-0000-0000-0000-000000000001',
    '18000000-0000-0000-0000-000000000002',
-   now() - interval '1 day');
+   now() - interval '1 day'),
+  -- The old primary's Auth row is deliberately missing. The audit entry must
+  -- remain readable and return a NULL email for the UI fallback.
+  ('18000000-0000-0000-0000-000000000099',
+   '18000000-0000-0000-0000-000000000002',
+   '18000000-0000-0000-0000-000000000001',
+   now());
 
 -- ===========================================================================
 -- G1. list_primary_transfer_candidates()
@@ -204,21 +207,61 @@ select ok(
   not has_table_privilege('anon', 'public.admin_primary_transfers', 'select'),
   'anon holds no SELECT on the audit table at all');
 
--- 5. Who actually sees the rows. --------------------------------------------
+-- 5. The identity lookup is limited to the active primary. ------------------
+select ok(
+  (select prosecdef from pg_proc
+    where oid = 'public.list_primary_transfer_history(integer)'::regprocedure),
+  'list_primary_transfer_history is SECURITY DEFINER');
+
+select ok(
+  (select proconfig @> array['search_path=""'] from pg_proc
+    where oid = 'public.list_primary_transfer_history(integer)'::regprocedure),
+  'list_primary_transfer_history pins an empty search_path');
+
+select ok(
+  not has_function_privilege(
+    'anon', 'public.list_primary_transfer_history(integer)', 'execute'),
+  'anon cannot execute the history identity lookup');
+
+select ok(
+  has_function_privilege(
+    'authenticated', 'public.list_primary_transfer_history(integer)', 'execute'),
+  'authenticated can call the lookup, which checks active-primary status');
+
+-- 6. Who actually sees the rows. --------------------------------------------
 set local request.jwt.claims = '{"sub":"18000000-0000-0000-0000-000000000001","role":"authenticated"}';
 set local role authenticated;
 select is(
   (select count(*)::int from public.admin_primary_transfers),
-  2, 'the active primary reads the full audit trail');
+  3, 'the active primary reads the full audit trail');
+select is(
+  (select count(*)::int from public.list_primary_transfer_history()),
+  3, 'the active primary reads all history identity rows');
+select is(
+  (select previous_primary_email || ' -> ' || new_primary_email
+    from public.list_primary_transfer_history()
+    where previous_primary_email = 'p0@fixture.invalid'),
+  'p0@fixture.invalid -> s1@fixture.invalid',
+  'the history resolves both administrator identities to Auth emails');
+select is(
+  (select previous_primary_email
+    from public.list_primary_transfer_history()
+    where new_primary_email = 's1@fixture.invalid'
+      and previous_primary_email is null),
+  null::text,
+  'a deleted Auth user produces a NULL identity without losing its audit row');
 reset role;
 
--- Documented policy: ANY active administrator may read the history. This
--- assertion pins that decision; changing it must be a deliberate edit.
+-- The existing table policy remains unchanged for active standard admins,
+-- but the email-bearing RPC is restricted to the active primary.
 set local request.jwt.claims = '{"sub":"18000000-0000-0000-0000-000000000002","role":"authenticated"}';
 set local role authenticated;
 select is(
   (select count(*)::int from public.admin_primary_transfers),
-  2, 'an active STANDARD administrator also reads the trail (documented policy)');
+  3, 'an active STANDARD administrator still reads the UUID-only audit trail');
+select is(
+  (select count(*)::int from public.list_primary_transfer_history()),
+  0, 'an active STANDARD administrator cannot resolve audit identities');
 reset role;
 
 set local request.jwt.claims = '{"sub":"18000000-0000-0000-0000-000000000004","role":"authenticated"}';
@@ -226,6 +269,9 @@ set local role authenticated;
 select is(
   (select count(*)::int from public.admin_primary_transfers),
   0, 'a DEACTIVATED administrator reads zero audit rows');
+select is(
+  (select count(*)::int from public.list_primary_transfer_history()),
+  0, 'a DEACTIVATED administrator cannot resolve audit identities');
 reset role;
 
 set local request.jwt.claims = '{"sub":"18000000-0000-0000-0000-000000000006","role":"authenticated"}';
@@ -233,6 +279,9 @@ set local role authenticated;
 select is(
   (select count(*)::int from public.admin_primary_transfers),
   0, 'an authenticated non-administrator reads zero audit rows');
+select is(
+  (select count(*)::int from public.list_primary_transfer_history()),
+  0, 'a non-administrator cannot resolve audit identities');
 reset role;
 
 select * from finish();

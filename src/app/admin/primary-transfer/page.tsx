@@ -4,7 +4,10 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { getPrimaryTransferPageData } from "@/lib/admin-primary-data";
-import { decidePrimaryTransferAccess } from "@/lib/primary-transfer";
+import {
+  decidePrimaryTransferAccess,
+  formatPrimaryTransferIdentity,
+} from "@/lib/primary-transfer";
 import { AdminWorkspace } from "../admin-shell";
 import { transferPrimaryAdminAction } from "./actions";
 import { PrimaryTransferForm } from "./transfer-form";
@@ -25,10 +28,6 @@ function formatTransferredAt(value: string): string {
       timeZone: "Africa/Lagos",
     }).format(new Date(value)) + " WAT"
   );
-}
-
-function shortId(value: string): string {
-  return value.slice(0, 8);
 }
 
 function Breadcrumb() {
@@ -189,16 +188,18 @@ export default async function PrimaryTransferPage() {
                   className="flex flex-col gap-1 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <p className="text-sm text-[#101B33]">
-                    <span className="font-mono text-xs text-[#475467]">
-                      {shortId(entry.previousPrimaryId)}
+                    <span className="font-medium text-[#475467]">
+                      {formatPrimaryTransferIdentity(
+                        entry.previousPrimaryEmail,
+                      )}
                     </span>{" "}
                     <span aria-hidden="true">→</span>
                     <span className="sr-only">
                       {" "}
                       transferred to{" "}
                     </span>{" "}
-                    <span className="font-mono text-xs text-[#475467]">
-                      {shortId(entry.newPrimaryId)}
+                    <span className="font-medium text-[#475467]">
+                      {formatPrimaryTransferIdentity(entry.newPrimaryEmail)}
                     </span>
                   </p>
                   <p className="text-xs text-[#8A93A3]">

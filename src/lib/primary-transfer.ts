@@ -17,14 +17,57 @@ export type PrimaryTransferCandidate = {
   adminSince: string | null;
 };
 
-/** One successful transfer, as recorded in `admin_primary_transfers`. */
+/** One successful transfer with its current Auth email identities, if available. */
 export type PrimaryTransferHistoryEntry = {
   id: string;
-  previousPrimaryId: string;
-  newPrimaryId: string;
-  initiatedById: string;
+  previousPrimaryEmail: string | null;
+  newPrimaryEmail: string | null;
   transferredAt: string;
 };
+
+type PrimaryTransferHistoryRow = {
+  id?: unknown;
+  previous_primary_email?: unknown;
+  new_primary_email?: unknown;
+  transferred_at?: unknown;
+};
+
+/** Shapes history returned by the active-primary-scoped database function. */
+export function shapePrimaryTransferHistory(
+  data: unknown,
+): PrimaryTransferHistoryEntry[] {
+  if (!Array.isArray(data)) return [];
+
+  const entries: PrimaryTransferHistoryEntry[] = [];
+  for (const value of data) {
+    if (typeof value !== "object" || value === null) continue;
+    const row = value as PrimaryTransferHistoryRow;
+    if (typeof row.id !== "string" || typeof row.transferred_at !== "string") {
+      continue;
+    }
+
+    entries.push({
+      id: row.id,
+      previousPrimaryEmail:
+        typeof row.previous_primary_email === "string" &&
+        row.previous_primary_email.trim()
+          ? row.previous_primary_email.trim()
+          : null,
+      newPrimaryEmail:
+        typeof row.new_primary_email === "string" &&
+        row.new_primary_email.trim()
+          ? row.new_primary_email.trim()
+          : null,
+      transferredAt: row.transferred_at,
+    });
+  }
+
+  return entries;
+}
+
+export function formatPrimaryTransferIdentity(email: string | null): string {
+  return email?.trim() || "Administrator identity unavailable";
+}
 
 export type TransferFailureReason =
   | "unauthenticated"
