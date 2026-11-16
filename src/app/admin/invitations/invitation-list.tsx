@@ -133,10 +133,10 @@
 
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { AdminNotice } from "../admin-notice";
 import type { ManagedInvitation } from "@/lib/admin-invitation-data";
-import { LoadingButton } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/modal-dialog";
 import {
   deletePastInvitationAction,
   type InvitationActionState,
@@ -148,6 +148,11 @@ type RevokeFormAction = (
   previous: InvitationActionState,
   form: FormData,
 ) => Promise<InvitationActionState>;
+
+type InvitationConfirmation = {
+  kind: "revoke" | "delete";
+  invitation: ManagedInvitation;
+};
 
 function formatExpiry(value: string): string {
   return (
@@ -178,6 +183,37 @@ export function InvitationList({
 
   const [deleteState, deleteFormAction, deletePending] =
     useActionState(deletePastInvitationAction, initialState);
+  const [confirmation, setConfirmation] =
+    useState<InvitationConfirmation | null>(null);
+  const [confirmationPending, setConfirmationPending] = useState(false);
+  const revokeFormRef = useRef<HTMLFormElement>(null);
+  const deleteFormRef = useRef<HTMLFormElement>(null);
+  const wasRevokePending = useRef(false);
+  const wasDeletePending = useRef(false);
+
+  useEffect(() => {
+    if (revokePending) {
+      wasRevokePending.current = true;
+    } else if (wasRevokePending.current) {
+      wasRevokePending.current = false;
+      setConfirmationPending(false);
+      setConfirmation((current) =>
+        current?.kind === "revoke" ? null : current,
+      );
+    }
+  }, [revokePending]);
+
+  useEffect(() => {
+    if (deletePending) {
+      wasDeletePending.current = true;
+    } else if (wasDeletePending.current) {
+      wasDeletePending.current = false;
+      setConfirmationPending(false);
+      setConfirmation((current) =>
+        current?.kind === "delete" ? null : current,
+      );
+    }
+  }, [deletePending]);
 
   const pendingInvitations = invitations.filter(
     (invitation) => invitation.status === "pending",
@@ -209,6 +245,30 @@ export function InvitationList({
         />
       )}
 
+      <form ref={revokeFormRef} action={revokeFormAction} hidden>
+        <input
+          type="hidden"
+          name="invitationId"
+          value={
+            confirmation?.kind === "revoke"
+              ? confirmation.invitation.id
+              : ""
+          }
+        />
+      </form>
+
+      <form ref={deleteFormRef} action={deleteFormAction} hidden>
+        <input
+          type="hidden"
+          name="invitationId"
+          value={
+            confirmation?.kind === "delete"
+              ? confirmation.invitation.id
+              : ""
+          }
+        />
+      </form>
+
       {pendingInvitations.length === 0 ? (
         <p className="rounded-xl border border-[#E4E7EC] bg-[#F8F9FB] px-4 py-3 text-sm leading-6 text-[#475467]">
           No pending invitations. Sent invitations appear here until
@@ -230,21 +290,16 @@ export function InvitationList({
                 </p>
               </div>
 
-              <form action={revokeFormAction}>
-                <input
-                  type="hidden"
-                  name="invitationId"
-                  value={invitation.id}
-                />
-                <LoadingButton
-                  type="submit"
-                  pendingLabel="Revoking invitation…"
-                  disabled={revokePending}
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-sm font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
-                >
-                  Revoke
-                </LoadingButton>
-              </form>
+              <button
+                type="button"
+                disabled={revokePending || confirmationPending}
+                onClick={() =>
+                  setConfirmation({ kind: "revoke", invitation })
+                }
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-sm font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
+              >
+                Revoke
+              </button>
             </li>
           ))}
         </ul>
@@ -274,37 +329,83 @@ export function InvitationList({
                   </span>
                 </div>
 
-                <form
-                  action={deleteFormAction}
-                  onSubmit={(event) => {
-                    const confirmed = window.confirm(
-                      `Permanently delete the ${invitation.status} invitation for ${invitation.email}?\n\nThis removes only the invitation record. It does not delete an administrator account or Supabase Auth user.`,
-                    );
-
-                    if (!confirmed) {
-                      event.preventDefault();
-                    }
-                  }}
+                <button
+                  type="button"
+                  disabled={deletePending || confirmationPending}
+                  onClick={() =>
+                    setConfirmation({ kind: "delete", invitation })
+                  }
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-xs font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
                 >
-                  <input
-                    type="hidden"
-                    name="invitationId"
-                    value={invitation.id}
-                  />
-
-                  <LoadingButton
-                    type="submit"
-                    pendingLabel="Deleting invitation…"
-                    disabled={deletePending}
-                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-xs font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
-                  >
-                    Delete
-                  </LoadingButton>
-                </form>
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
         </div>
+      )}
+
+      {confirmation && (
+        <ConfirmationDialog
+          open
+          title={
+            confirmation.kind === "revoke"
+              ? "Revoke invitation?"
+              : "Delete invitation?"
+          }
+          description={
+            confirmation.kind === "revoke" ? (
+              <>
+                The invitation for{" "}
+                <strong className="font-semibold text-[#101B33]">
+                  {confirmation.invitation.email}
+                </strong>{" "}
+                will no longer be usable. The invitation record will
+                remain in the history.
+              </>
+            ) : (
+              <>
+                Permanently remove the{" "}
+                {confirmation.invitation.status} invitation record for{" "}
+                <strong className="font-semibold text-[#101B33]">
+                  {confirmation.invitation.email}
+                </strong>
+                ? This does not delete an administrator account or its
+                Supabase Auth user.
+              </>
+            )
+          }
+          confirmLabel={
+            confirmation.kind === "revoke" ? "Revoke" : "Delete"
+          }
+          pendingLabel={
+            confirmation.kind === "revoke"
+              ? "Revoking invitation…"
+              : "Deleting invitation…"
+          }
+          pending={
+            confirmationPending ||
+            (confirmation.kind === "revoke"
+              ? revokePending
+              : deletePending)
+          }
+          destructive
+          onCancel={() => setConfirmation(null)}
+          onConfirm={() => {
+            if (confirmationPending) return;
+
+            if (confirmation.kind === "revoke") {
+              if (revokePending || !revokeFormRef.current) return;
+              setConfirmationPending(true);
+              revokeFormRef.current.requestSubmit();
+              return;
+            }
+
+            if (deletePending || !deleteFormRef.current) return;
+            setConfirmationPending(true);
+            deleteFormRef.current.requestSubmit();
+          }}
+        />
       )}
     </div>
   );

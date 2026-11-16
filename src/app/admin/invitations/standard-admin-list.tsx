@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { AdminNotice } from "../admin-notice";
-import { LoadingButton } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/modal-dialog";
 import type { StandardAdminEntry } from "@/lib/admin-invitation-data";
 import type { InvitationActionState } from "./actions";
 
@@ -12,6 +12,11 @@ type AdminFormAction = (
   previous: InvitationActionState,
   form: FormData,
 ) => Promise<InvitationActionState>;
+
+type AdminConfirmation = {
+  kind: "deactivate" | "reactivate";
+  admin: StandardAdminEntry;
+};
 
 function formatSince(value: string | null): string {
   if (!value) return "Unknown start date";
@@ -40,6 +45,37 @@ export function StandardAdminList({
     useActionState(deactivateAction, initialState);
   const [reactivateState, reactivateFormAction, reactivatePending] =
     useActionState(reactivateAction, initialState);
+  const [confirmation, setConfirmation] =
+    useState<AdminConfirmation | null>(null);
+  const [confirmationPending, setConfirmationPending] = useState(false);
+  const deactivateFormRef = useRef<HTMLFormElement>(null);
+  const reactivateFormRef = useRef<HTMLFormElement>(null);
+  const wasDeactivatePending = useRef(false);
+  const wasReactivatePending = useRef(false);
+
+  useEffect(() => {
+    if (deactivatePending) {
+      wasDeactivatePending.current = true;
+    } else if (wasDeactivatePending.current) {
+      wasDeactivatePending.current = false;
+      setConfirmationPending(false);
+      setConfirmation((current) =>
+        current?.kind === "deactivate" ? null : current,
+      );
+    }
+  }, [deactivatePending]);
+
+  useEffect(() => {
+    if (reactivatePending) {
+      wasReactivatePending.current = true;
+    } else if (wasReactivatePending.current) {
+      wasReactivatePending.current = false;
+      setConfirmationPending(false);
+      setConfirmation((current) =>
+        current?.kind === "reactivate" ? null : current,
+      );
+    }
+  }, [reactivatePending]);
 
   const errorMessage =
     deactivateState.message ?? reactivateState.message;
@@ -58,6 +94,30 @@ export function StandardAdminList({
           className="mb-4"
         />
       )}
+
+      <form ref={deactivateFormRef} action={deactivateFormAction} hidden>
+        <input
+          type="hidden"
+          name="targetUserId"
+          value={
+            confirmation?.kind === "deactivate"
+              ? confirmation.admin.userId
+              : ""
+          }
+        />
+      </form>
+
+      <form ref={reactivateFormRef} action={reactivateFormAction} hidden>
+        <input
+          type="hidden"
+          name="targetUserId"
+          value={
+            confirmation?.kind === "reactivate"
+              ? confirmation.admin.userId
+              : ""
+          }
+        />
+      </form>
 
       {activeAdmins.length === 0 ? (
         <p className="rounded-xl border border-[#E4E7EC] bg-[#F8F9FB] px-4 py-3 text-sm leading-6 text-[#475467]">
@@ -79,21 +139,16 @@ export function StandardAdminList({
                   Admin since {formatSince(admin.adminSince)}
                 </p>
               </div>
-              <form action={deactivateFormAction}>
-                <input
-                  type="hidden"
-                  name="targetUserId"
-                  value={admin.userId}
-                />
-                <LoadingButton
-                  type="submit"
-                  pendingLabel="Deactivating administrator…"
-                  disabled={deactivatePending}
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-sm font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
-                >
-                  Deactivate
-                </LoadingButton>
-              </form>
+              <button
+                type="button"
+                disabled={deactivatePending || confirmationPending}
+                onClick={() =>
+                  setConfirmation({ kind: "deactivate", admin })
+                }
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-sm font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
+              >
+                Deactivate
+              </button>
             </li>
           ))}
         </ul>
@@ -122,26 +177,82 @@ export function StandardAdminList({
                   <span className="inline-flex w-fit items-center rounded-full border border-[#E4E7EC] bg-[#F8F9FB] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A93A3]">
                     Deactivated
                   </span>
-                  <form action={reactivateFormAction}>
-                    <input
-                      type="hidden"
-                      name="targetUserId"
-                      value={admin.userId}
-                    />
-                    <LoadingButton
-                      type="submit"
-                      pendingLabel="Reactivating administrator…"
-                      disabled={reactivatePending}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#CFE5D5] px-4 text-sm font-semibold text-[#3C704B] transition hover:bg-[#F0F8F2] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3C704B]"
-                    >
-                      Reactivate
-                    </LoadingButton>
-                  </form>
+                  <button
+                    type="button"
+                    disabled={reactivatePending || confirmationPending}
+                    onClick={() =>
+                      setConfirmation({ kind: "reactivate", admin })
+                    }
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#CFE5D5] px-4 text-sm font-semibold text-[#3C704B] transition hover:bg-[#F0F8F2] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3C704B]"
+                  >
+                    Reactivate
+                  </button>
                 </div>
               </li>
             ))}
           </ul>
         </div>
+      )}
+
+      {confirmation && (
+        <ConfirmationDialog
+          open
+          title={
+            confirmation.kind === "deactivate"
+              ? "Deactivate administrator?"
+              : "Reactivate administrator?"
+          }
+          description={
+            confirmation.kind === "deactivate" ? (
+              <>
+                <strong className="font-semibold text-[#101B33]">
+                  {adminLabel(confirmation.admin)}
+                </strong>{" "}
+                will lose access to the admin dashboard. You can
+                reactivate their account later.
+              </>
+            ) : (
+              <>
+                <strong className="font-semibold text-[#101B33]">
+                  {adminLabel(confirmation.admin)}
+                </strong>{" "}
+                will regain access to the admin dashboard.
+              </>
+            )
+          }
+          confirmLabel={
+            confirmation.kind === "deactivate"
+              ? "Deactivate"
+              : "Reactivate"
+          }
+          pendingLabel={
+            confirmation.kind === "deactivate"
+              ? "Deactivating…"
+              : "Reactivating…"
+          }
+          pending={
+            confirmationPending ||
+            (confirmation.kind === "deactivate"
+              ? deactivatePending
+              : reactivatePending)
+          }
+          destructive={confirmation.kind === "deactivate"}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={() => {
+            if (confirmationPending) return;
+
+            if (confirmation.kind === "deactivate") {
+              if (deactivatePending || !deactivateFormRef.current) return;
+              setConfirmationPending(true);
+              deactivateFormRef.current.requestSubmit();
+              return;
+            }
+
+            if (reactivatePending || !reactivateFormRef.current) return;
+            setConfirmationPending(true);
+            reactivateFormRef.current.requestSubmit();
+          }}
+        />
       )}
     </div>
   );
