@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createAdminNoticeTimer } from "@/lib/admin-notice-timer";
 
 type NoticeKind = "success" | "error" | "warning" | "info";
@@ -30,11 +30,17 @@ export function AdminNotice({
   children?: React.ReactNode;
 }) {
   const [dismissedKey, setDismissedKey] = useState<unknown>(null);
+  const timerRef = useRef<ReturnType<typeof createAdminNoticeTimer> | null>(
+    null,
+  );
+  const pointerInsideRef = useRef(false);
+  const focusInsideRef = useRef(false);
   const resetValue = resetKey ?? message;
   const dismissed = dismissedKey === resetValue;
+  const shouldPersist = persistent || kind === "error";
 
   useEffect(() => {
-    if (persistent) return;
+    if (shouldPersist) return;
 
     const timer = createAdminNoticeTimer(
       () => {
@@ -59,19 +65,54 @@ export function AdminNotice({
         );
       },
       window,
-      3000,
+      5000,
     );
-    timer.start();
+    timerRef.current = timer;
+    if (!pointerInsideRef.current && !focusInsideRef.current) {
+      timer.start();
+    }
 
-    return () => timer.clear();
-  }, [persistent, clearQueryParams, resetValue]);
+    return () => {
+      timer.clear();
+      if (timerRef.current === timer) timerRef.current = null;
+    };
+  }, [shouldPersist, clearQueryParams, resetValue]);
 
   if (dismissed) return null;
+
+  function dismiss() {
+    pointerInsideRef.current = false;
+    focusInsideRef.current = false;
+    timerRef.current?.clear();
+    setDismissedKey(resetValue);
+  }
 
   return (
     <div
       role={kind === "error" ? "alert" : "status"}
       aria-live={kind === "error" ? "assertive" : "polite"}
+      onMouseEnter={() => {
+        pointerInsideRef.current = true;
+        timerRef.current?.clear();
+      }}
+      onMouseLeave={() => {
+        pointerInsideRef.current = false;
+        if (!focusInsideRef.current) timerRef.current?.start();
+      }}
+      onFocusCapture={() => {
+        focusInsideRef.current = true;
+        timerRef.current?.clear();
+      }}
+      onBlurCapture={(event) => {
+        const nextTarget = event.relatedTarget;
+        if (
+          !(nextTarget instanceof Node) ||
+          !event.currentTarget.contains(nextTarget)
+        ) {
+          focusInsideRef.current = false;
+          if (!pointerInsideRef.current) timerRef.current?.start();
+        }
+      }}
       className={`flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${noticeStyles[kind]} ${className}`}
     >
       <div className="min-w-0 flex-1">
@@ -80,9 +121,9 @@ export function AdminNotice({
       </div>
       <button
         type="button"
-        onClick={() => setDismissedKey(resetValue)}
+        onClick={dismiss}
         aria-label="Dismiss notification"
-        className="-mr-1 -mt-1 grid size-8 shrink-0 place-items-center rounded-full text-current/75 hover:bg-black/5 hover:text-current focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
+        className="-mr-1 -mt-1 grid size-11 shrink-0 place-items-center rounded-full text-current/75 hover:bg-black/5 hover:text-current focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-current"
       >
         <span aria-hidden="true">×</span>
       </button>

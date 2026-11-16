@@ -7,7 +7,6 @@ const {
   validateSetupPassword,
   confirmFailureMessage,
   setupFailureMessage,
-  setupFailureMessageForInvitation,
   buildInviteCallbackUrl,
   buildSetupForwardUrl,
   buildConfirmErrorUrl,

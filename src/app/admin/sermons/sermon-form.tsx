@@ -1202,6 +1202,7 @@ import {
 } from "react";
 import type { AdminSermonEdit } from "@/lib/admin-sermon-data";
 import type { SermonMediaType } from "@/lib/admin-sermon-validation";
+import { LoadingButton } from "@/components/ui/button";
 import { AdminNotice } from "../admin-notice";
 import {
   createSermonAction,
@@ -1402,7 +1403,7 @@ function SermonFields({
             >
               Paste a normal YouTube watch, short, or embed link. The
               server validates the video ID; no embed code is stored
-              or rendered. Enter the video's duration below.
+              or rendered. Enter the video&apos;s duration below.
             </p>
             {errors.youtubeUrl && (
               <p
@@ -1555,17 +1556,15 @@ function SermonFields({
           >
             Cancel
           </Link>
-          <button
+          <LoadingButton
             type="submit"
+            pending={pending}
+            pendingLabel="Saving sermon…"
             disabled={pending}
             className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
           >
-            {pending
-              ? "Saving…"
-              : initial
-                ? "Save changes"
-                : "Create draft sermon"}
-          </button>
+            {initial ? "Save changes" : "Create draft sermon"}
+          </LoadingButton>
         </div>
       )}
     </>
@@ -2239,8 +2238,10 @@ export function CreateSermonForm() {
           >
             Sermon list
           </Link>
-          <button
+          <LoadingButton
             type="submit"
+            pending={pending && pendingIntent === "draft"}
+            pendingLabel="Saving sermon draft…"
             disabled={pending || published || scheduled}
             onClick={() => {
               intentRef.current = "draft";
@@ -2248,14 +2249,14 @@ export function CreateSermonForm() {
             }}
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-5 text-sm font-semibold text-[#344054] hover:bg-[#F8F9FB] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
           >
-            {pending && pendingIntent === "draft"
-              ? "Saving…"
-              : draftId && !selectedFile && !audioAttached && !isVideo
-                ? "Open saved draft"
-                : "Save to Draft"}
-          </button>
-          <button
+            {draftId && !selectedFile && !audioAttached && !isVideo
+              ? "Open saved draft"
+              : "Save to draft"}
+          </LoadingButton>
+          <LoadingButton
             type="submit"
+            pending={pending && pendingIntent === "publish"}
+            pendingLabel="Publishing sermon…"
             disabled={pending || published || scheduled}
             onClick={() => {
               intentRef.current = "publish";
@@ -2263,12 +2264,12 @@ export function CreateSermonForm() {
             }}
             className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#9A772E] px-5 text-sm font-semibold text-white hover:bg-[#765A22] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
           >
-            {pending && pendingIntent === "publish"
-              ? "Publishing…"
-              : "Publish Sermon"}
-          </button>
-          <button
+            Publish sermon
+          </LoadingButton>
+          <LoadingButton
             type="submit"
+            pending={pending && pendingIntent === "schedule"}
+            pendingLabel="Scheduling sermon…"
             disabled={pending || published || scheduled}
             onClick={() => {
               intentRef.current = "schedule";
@@ -2276,10 +2277,8 @@ export function CreateSermonForm() {
             }}
             className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D9E2F2] bg-[#F3F6FC] px-5 text-sm font-semibold text-[#435A82] hover:bg-[#E8EDF8] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
           >
-            {pending && pendingIntent === "schedule"
-              ? "Scheduling…"
-              : "Schedule Sermon"}
-          </button>
+            Schedule sermon
+          </LoadingButton>
         </div>
         <span className="sr-only" aria-live="polite">
           {pending
@@ -2329,14 +2328,16 @@ export function EditSermonForm({
         >
           Cancel
         </Link>
-        <button
+        <LoadingButton
           type="submit"
           form={formId}
+          pending={pending}
+          pendingLabel="Saving sermon…"
           disabled={pending}
           className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] sm:w-auto"
         >
-          {pending ? "Saving…" : "Save changes"}
-        </button>
+          Save changes
+        </LoadingButton>
       </div>
     </>
   );

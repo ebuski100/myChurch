@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import type { ReactNode } from "react";
 import type { AdminEvent } from "@/lib/admin-event-data";
+import { LoadingButton } from "@/components/ui/button";
 import {
   EVENT_STATUSES,
   formatLagosDateTimeInput,
@@ -391,26 +392,30 @@ export function EventForm({
               >
                 Cancel
               </Link>
-              <button
+              <LoadingButton
                 type="submit"
                 name="createIntent"
                 value="draft"
                 onClick={() => setCreateIntent("draft")}
+                pending={pending && createIntent === "draft"}
+                pendingLabel="Saving event draft…"
                 disabled={pending}
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[#D0D5DD] px-5 text-sm font-semibold text-[#344054] hover:bg-[#F8F9FB] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] sm:w-auto"
               >
-                {pending ? "Saving…" : "Save Draft"}
-              </button>
-              <button
+                Save draft
+              </LoadingButton>
+              <LoadingButton
                 type="submit"
                 name="createIntent"
                 value="published"
                 onClick={() => setCreateIntent("published")}
+                pending={pending && createIntent === "published"}
+                pendingLabel="Publishing event…"
                 disabled={pending}
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] sm:w-auto"
               >
-                {pending ? "Publishing…" : "Publish Event"}
-              </button>
+                Publish event
+              </LoadingButton>
             </div>
           )}
         </section>
@@ -423,14 +428,16 @@ export function EventForm({
           >
             Cancel
           </Link>
-          <button
+          <LoadingButton
             type="submit"
             form={formId}
+            pending={pending}
+            pendingLabel="Saving event…"
             disabled={pending}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] sm:w-auto"
           >
-            {pending ? "Saving…" : "Save Event"}
-          </button>
+            Save event
+          </LoadingButton>
         </div>
       )}
     </>

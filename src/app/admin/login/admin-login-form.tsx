@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { LoadingButton } from "@/components/ui/button";
 type AdminLoginFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   error: string | null;
@@ -93,9 +94,10 @@ export default function AdminLoginForm({
         </div>
       </div>
 
-      <button
+      <LoadingButton
         type="submit"
-        className="group mt-2 inline-flex h-12 w-full items-center justify-center gap-3 rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white shadow-[0_5px_16px_rgba(16,27,51,0.14)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1B2B49] hover:shadow-[0_9px_22px_rgba(16,27,51,0.2)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#A7894B] active:translate-y-0"
+        pendingLabel="Signing in…"
+        className="group mt-2 h-12 w-full rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white shadow-[0_5px_16px_rgba(16,27,51,0.14)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1B2B49] hover:shadow-[0_9px_22px_rgba(16,27,51,0.2)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#A7894B] active:translate-y-0"
       >
         Sign in to dashboard
         <span
@@ -104,7 +106,7 @@ export default function AdminLoginForm({
         >
           →
         </span>
-      </button>
+      </LoadingButton>
       <div className="flex justify-end">
         <Link
           href="/admin/forgot-password"

@@ -4,12 +4,25 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 
 const STORAGE_KEY = "victorycity.listen-later.v1";
+
+type ListenLaterSnapshot = {
+  savedIds: string[];
+  isReady: boolean;
+};
+
+const SERVER_SNAPSHOT: ListenLaterSnapshot = {
+  savedIds: [],
+  isReady: false,
+};
+
+let snapshot = SERVER_SNAPSHOT;
+let hasReadStorage = false;
+const listeners = new Set<() => void>();
 
 type ListenLaterContextValue = {
   savedIds: string[];
@@ -21,61 +34,87 @@ type ListenLaterContextValue = {
 const ListenLaterContext =
   createContext<ListenLaterContextValue | null>(null);
 
+function readSavedIds(): string[] {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [];
+
+    const parsed: unknown = JSON.parse(stored);
+    if (
+      !Array.isArray(parsed) ||
+      !parsed.every((item): item is string => typeof item === "string")
+    ) {
+      return [];
+    }
+
+    return [...new Set(parsed)];
+  } catch {
+    return [];
+  }
+}
+
+function publish(savedIds: string[], isReady = true) {
+  if (
+    snapshot.isReady === isReady &&
+    snapshot.savedIds.length === savedIds.length &&
+    snapshot.savedIds.every((id, index) => id === savedIds[index])
+  ) {
+    return;
+  }
+
+  snapshot = { savedIds, isReady };
+  listeners.forEach((listener) => listener());
+}
+
+function initializeFromStorage() {
+  if (hasReadStorage) return;
+  hasReadStorage = true;
+  publish(readSavedIds());
+}
+
+function handleStorage(event: StorageEvent) {
+  if (event.key !== STORAGE_KEY && event.key !== null) return;
+
+  hasReadStorage = true;
+  publish(readSavedIds());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+
+  if (listeners.size === 1) {
+    window.addEventListener("storage", handleStorage);
+    initializeFromStorage();
+  }
+
+  return () => {
+    listeners.delete(listener);
+
+    if (listeners.size === 0) {
+      window.removeEventListener("storage", handleStorage);
+      hasReadStorage = false;
+    }
+  };
+}
+
+function getSnapshot() {
+  return snapshot;
+}
+
+function getServerSnapshot() {
+  return SERVER_SNAPSHOT;
+}
+
 export function ListenLaterProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-
-      if (stored) {
-        const parsed: unknown = JSON.parse(stored);
-
-        if (
-          Array.isArray(parsed) &&
-          parsed.every(
-            (item): item is string => typeof item === "string",
-          )
-        ) {
-          setSavedIds([...new Set(parsed)]);
-        }
-      }
-    } catch {
-      // Storage may be unavailable; the feature can still work for this page session.
-    } finally {
-      setIsReady(true);
-    }
-
-    function handleStorage(event: StorageEvent) {
-      if (event.key !== STORAGE_KEY && event.key !== null) return;
-
-      try {
-        const stored = window.localStorage.getItem(STORAGE_KEY);
-        const parsed: unknown = stored ? JSON.parse(stored) : [];
-
-        if (
-          Array.isArray(parsed) &&
-          parsed.every(
-            (item): item is string => typeof item === "string",
-          )
-        ) {
-          setSavedIds([...new Set(parsed)]);
-        } else {
-          setSavedIds([]);
-        }
-      } catch {
-        setSavedIds([]);
-      }
-    }
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+  const { savedIds, isReady } = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 
   const isSaved = useCallback(
     (sermonId: string) => savedIds.includes(sermonId),
@@ -84,11 +123,14 @@ export function ListenLaterProvider({
 
   const toggleSaved = useCallback(
     (sermonId: string) => {
-      const nextIds = savedIds.includes(sermonId)
-        ? savedIds.filter((id) => id !== sermonId)
-        : [sermonId, ...savedIds];
+      if (!hasReadStorage) initializeFromStorage();
 
-      setSavedIds(nextIds);
+      const currentIds = snapshot.savedIds;
+      const nextIds = currentIds.includes(sermonId)
+        ? currentIds.filter((id) => id !== sermonId)
+        : [sermonId, ...currentIds];
+
+      publish(nextIds);
 
       try {
         window.localStorage.setItem(
@@ -99,7 +141,7 @@ export function ListenLaterProvider({
         // Keep the updated state in memory if browser storage is unavailable.
       }
     },
-    [savedIds],
+    [],
   );
 
   return (

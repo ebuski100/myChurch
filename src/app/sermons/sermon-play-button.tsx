@@ -54,6 +54,7 @@
 
 import { useAudioPlayer } from "./audio-player-provider";
 import type { Sermon } from "@/lib/sermons";
+import { Spinner } from "@/components/ui/button";
 
 export function SermonPlayButton({ sermon }: { sermon: Sermon }) {
   const { currentSermon, status, playSermon, togglePlayback } =
@@ -61,10 +62,12 @@ export function SermonPlayButton({ sermon }: { sermon: Sermon }) {
 
   const isCurrent = currentSermon?.id === sermon.id;
   const isPlaying = isCurrent && status === "playing";
+  const isLoading = isCurrent && status === "loading";
 
   return (
     <button
       type="button"
+      disabled={isLoading}
       onClick={() => {
         if (isCurrent) {
           void togglePlayback();
@@ -72,11 +75,14 @@ export function SermonPlayButton({ sermon }: { sermon: Sermon }) {
           void playSermon(sermon);
         }
       }}
-      aria-label={`${isPlaying ? "Pause" : "Play"} sermon: ${sermon.title}`}
-      title={isPlaying ? "Pause sermon" : "Play sermon"}
-      className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#101B33] text-white transition hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+      aria-label={`${isLoading ? "Loading" : isPlaying ? "Pause" : "Play"} sermon: ${sermon.title}`}
+      aria-busy={isLoading}
+      title={isLoading ? "Preparing sermon" : isPlaying ? "Pause sermon" : "Play sermon"}
+      className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-[#101B33] text-white transition hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] disabled:cursor-wait disabled:opacity-70"
     >
-      {isPlaying ? (
+      {isLoading ? (
+        <Spinner />
+      ) : isPlaying ? (
         <svg
           viewBox="0 0 20 20"
           fill="currentColor"

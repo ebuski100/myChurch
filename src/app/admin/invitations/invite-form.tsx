@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { AdminNotice } from "../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import type { InvitationActionState } from "./actions";
 
 const initialState: InvitationActionState = {};
@@ -61,13 +62,15 @@ export function InviteAdminForm({
             placeholder="new.admin@example.com"
             className="min-h-11 w-full flex-1 rounded-xl border border-[#D0D5DD] bg-white px-3.5 text-sm text-[#101B33] outline-none transition placeholder:text-[#98A2B3] focus:border-[#B99648] focus:ring-2 focus:ring-[#B99648]/15"
           />
-          <button
+          <LoadingButton
             type="submit"
+            pending={pending}
+            pendingLabel="Sending invitation…"
             disabled={pending || email.trim().length === 0}
             className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white transition hover:bg-[#263653] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
           >
-            {pending ? "Sending…" : "Send invitation"}
-          </button>
+            Send invitation
+          </LoadingButton>
         </div>
       </div>
     </form>

@@ -9,7 +9,7 @@ export function ListenLaterLink() {
   return (
     <Link
       href="/sermons/listen-later"
-      className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#D9B66D] bg-white px-4 text-sm font-semibold text-[#785B1F] transition hover:bg-[#F8F4E9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#D9B66D] bg-white px-4 text-sm font-semibold text-[#785B1F] transition hover:bg-[#F8F4E9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
     >
       <svg
         aria-hidden="true"

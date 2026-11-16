@@ -244,7 +244,7 @@ function AudioSermonRow({ sermon }: { sermon: SermonWithMedia }) {
             href={`/api/sermons/${encodeURIComponent(sermon.id)}/audio?download=1`}
             aria-label={`Download ${sermon.title}`}
             title="Download audio"
-            className="grid size-9 shrink-0 place-items-center rounded-full text-[#667085] transition hover:bg-[#F8F4E9] hover:text-[#785B1F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+            className="grid size-11 shrink-0 place-items-center rounded-full text-[#667085] transition hover:bg-[#F8F4E9] hover:text-[#785B1F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
           >
             <svg
               aria-hidden="true"
@@ -336,7 +336,11 @@ export function SermonLibrary({
             </p>
           </div>
 
-          <span className="rounded-full bg-[#F8F4E9] px-3 py-1.5 text-xs font-semibold text-[#785B1F]">
+          <span
+            aria-live="polite"
+            aria-atomic="true"
+            className="rounded-full bg-[#F8F4E9] px-3 py-1.5 text-xs font-semibold text-[#785B1F]"
+          >
             {filteredVideos.length}{" "}
             {filteredVideos.length === 1 ? "message" : "messages"}
           </span>
@@ -391,7 +395,17 @@ export function SermonLibrary({
             </p>
           </div>
 
-          <ListenLaterLink />
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              aria-live="polite"
+              aria-atomic="true"
+              className="rounded-full bg-[#F8F4E9] px-3 py-1.5 text-xs font-semibold text-[#785B1F]"
+            >
+              {filteredAudio.length}{" "}
+              {filteredAudio.length === 1 ? "message" : "messages"}
+            </span>
+            <ListenLaterLink />
+          </div>
         </div>
 
         <SectionFilters

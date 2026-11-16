@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Sermon } from "@/lib/sermons";
+import { Spinner } from "@/components/ui/button";
 
 type PlayerStatus =
   | "idle"
@@ -296,7 +297,7 @@ export function AudioPlayerProvider({
         <div className="relative border-t border-white/[0.09]">
           <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-4 lg:px-10">
             <div className="relative grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(260px,0.9fr)_auto] sm:items-center sm:gap-5 lg:gap-8">
-              <div className="flex min-w-0 items-center gap-3 pr-8 sm:pr-0">
+              <div className="flex min-w-0 items-center gap-3 pr-12 sm:pr-0">
                 <SermonArtwork />
 
                 <div className="min-w-0 flex-1">
@@ -337,14 +338,27 @@ export function AudioPlayerProvider({
                 <button
                   type="button"
                   onClick={() => void togglePlayback()}
-                  disabled={!currentSermon}
+                  disabled={!currentSermon || isLoading}
                   aria-label={
-                    isPlaying ? "Pause sermon" : "Play sermon"
+                    isLoading
+                      ? "Preparing sermon"
+                      : isPlaying
+                        ? "Pause sermon"
+                        : "Play sermon"
                   }
-                  title={isPlaying ? "Pause sermon" : "Play sermon"}
-                  className="grid size-10 shrink-0 place-items-center rounded-full bg-[#E6C77D] text-[#101B33] transition hover:bg-[#F1DCA4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D] disabled:opacity-50"
+                  aria-busy={isLoading}
+                  title={
+                    isLoading
+                      ? "Preparing sermon"
+                      : isPlaying
+                        ? "Pause sermon"
+                        : "Play sermon"
+                  }
+                  className="grid size-11 shrink-0 place-items-center rounded-full bg-[#E6C77D] text-[#101B33] transition hover:bg-[#F1DCA4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D] disabled:cursor-wait disabled:opacity-50"
                 >
-                  {isPlaying ? (
+                  {isLoading ? (
+                    <Spinner />
+                  ) : isPlaying ? (
                     <svg
                       viewBox="0 0 20 20"
                       fill="currentColor"
@@ -433,7 +447,7 @@ export function AudioPlayerProvider({
               <button
                 type="button"
                 onClick={closePlayer}
-                className="absolute right-0 top-0 grid size-8 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white/60 transition hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D] sm:static sm:size-9 sm:shrink-0"
+                className="absolute right-0 top-0 grid size-11 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white/60 transition hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D] sm:static sm:size-11 sm:shrink-0"
                 aria-label="Close audio player"
                 title="Close player"
               >

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AdminNotice } from "../../../admin-notice";
@@ -24,6 +25,7 @@ export default async function EditAdminEventPage({
   params: Promise<{ eventId: string }>;
   searchParams?: Promise<{ created?: string }>;
 }) {
+  await connection();
   const access = await getAdminAccess();
   if (access.status === "unauthenticated") redirect("/admin/login");
   if (access.status === "forbidden")
@@ -68,7 +70,7 @@ export default async function EditAdminEventPage({
             </p>
             <Link
               href="/admin/events"
-              className="mt-5 inline-flex min-h-10 items-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white"
+              className="mt-5 inline-flex min-h-11 items-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white"
             >
               Back to events
             </Link>

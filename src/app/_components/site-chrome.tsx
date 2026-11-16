@@ -117,7 +117,7 @@ export function SiteHeader({
 
         <Link
           href="/#visit"
-          className={`rounded-full bg-[#D9B66D] px-4 py-2.5 text-xs font-semibold text-[#101B33] transition-colors hover:bg-[#E8CC8B] ${focusClass} focus-visible:outline-white sm:px-5 sm:text-sm`}
+          className={`inline-flex min-h-11 items-center justify-center rounded-full bg-[#D9B66D] px-4 py-2.5 text-xs font-semibold text-[#101B33] transition-colors hover:bg-[#E8CC8B] ${focusClass} focus-visible:outline-white sm:px-5 sm:text-sm`}
         >
           Plan Your Visit
         </Link>
@@ -125,7 +125,7 @@ export function SiteHeader({
 
       <nav
         aria-label="Mobile navigation"
-        className="flex gap-5 overflow-x-auto px-5 pb-3 lg:hidden"
+        className="flex gap-4 overflow-x-auto px-5 pb-2 lg:hidden"
       >
         {navigation.map((item) => {
           const isActive =
@@ -138,7 +138,7 @@ export function SiteHeader({
               key={item.href}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
-              className={`shrink-0 text-xs transition-colors ${focusClass} ${
+              className={`inline-flex min-h-11 shrink-0 items-center text-xs transition-colors ${focusClass} ${
                 isActive ? activeLinkClass : inactiveLinkClass
               }`}
             >
@@ -175,7 +175,7 @@ export function SiteFooter() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`text-sm text-white/75 hover:text-white ${focusClass}`}
+                  className={`inline-flex min-h-11 items-center text-sm text-white/75 hover:text-white ${focusClass}`}
                 >
                   {item.label}
                 </Link>
@@ -224,7 +224,7 @@ export function SiteFooter() {
           <div className="flex flex-wrap items-center gap-5">
             <Link
               href="/admin/login"
-              className={`text-white/40 transition-colors hover:text-[#E6C77D] ${focusClass}`}
+              className={`inline-flex min-h-11 items-center text-white/40 transition-colors hover:text-[#E6C77D] ${focusClass}`}
             >
               Admin
             </Link>
@@ -233,7 +233,7 @@ export function SiteFooter() {
               href="https://web.facebook.com/profile.php?id=100067393373513"
               target="_blank"
               rel="noopener noreferrer"
-              className={`inline-flex items-center gap-2 text-white/65 hover:text-white ${focusClass}`}
+              className={`inline-flex min-h-11 items-center gap-2 text-white/65 hover:text-white ${focusClass}`}
             >
               <svg
                 viewBox="0 0 24 24"

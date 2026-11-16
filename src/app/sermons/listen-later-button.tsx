@@ -1,6 +1,7 @@
 "use client";
 
 import { useListenLater } from "./listen-later-provider";
+import { Spinner } from "@/components/ui/button";
 
 export function ListenLaterButton({
   sermonId,
@@ -17,15 +18,21 @@ export function ListenLaterButton({
       type="button"
       disabled={!isReady}
       onClick={() => toggleSaved(sermonId)}
+      aria-busy={!isReady}
       aria-label={
-        saved
+        !isReady
+          ? "Preparing Listen Later"
+          : saved
           ? `Remove ${sermonTitle} from Listen Later`
           : `Save ${sermonTitle} to Listen Later`
       }
       aria-pressed={saved}
       title={saved ? "Remove from Listen Later" : "Listen Later"}
-      className="grid size-9 shrink-0 place-items-center rounded-full text-[#785B1F] transition hover:bg-[#F8F4E9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] disabled:opacity-50"
+      className="grid size-11 shrink-0 place-items-center rounded-full text-[#785B1F] transition hover:bg-[#F8F4E9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] disabled:cursor-wait disabled:opacity-50"
     >
+      {!isReady ? (
+        <Spinner />
+      ) : (
       <svg
         aria-hidden="true"
         viewBox="0 0 20 20"
@@ -39,6 +46,7 @@ export function ListenLaterButton({
           strokeLinejoin="round"
         />
       </svg>
+      )}
     </button>
   );
 }

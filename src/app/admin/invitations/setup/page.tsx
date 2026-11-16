@@ -6,6 +6,7 @@ import { validateInvitationToken } from "@/lib/admin-invitations";
 import { buildConfirmErrorUrl } from "@/lib/admin-invite-setup";
 import { setupInvitationAction, setupSignOutAction } from "./actions";
 import { SetupInvitationForm } from "./setup-form";
+import { LoadingButton } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Set up your account | Admin | VictoryCity Revival Ministry",
@@ -38,17 +39,18 @@ function SetupProblemPanel({
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           {signOut && (
             <form action={setupSignOutAction}>
-              <button
+              <LoadingButton
                 type="submit"
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#E4E7EC] px-5 text-sm font-semibold text-[#475467] transition hover:bg-[#F8F9FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+                pendingLabel="Signing out…"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4E7EC] px-5 text-sm font-semibold text-[#475467] transition hover:bg-[#F8F9FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
               >
                 Sign out
-              </button>
+              </LoadingButton>
             </form>
           )}
           <Link
             href="/admin/login"
-            className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
           >
             Go to admin sign in
           </Link>

@@ -54,7 +54,7 @@ function RestrictedPanel() {
       <Link
         href="/admin"
         prefetch={false}
-        className="mt-5 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+        className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
       >
         Back to overview
       </Link>

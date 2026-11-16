@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   buildEventCalendarFile,
   type EventCalendarDetails,
 } from "@/lib/event-public-details";
+import { Spinner } from "@/components/ui/button";
 
 export function EventActions({
   event,
@@ -12,6 +13,8 @@ export function EventActions({
   event: EventCalendarDetails;
 }) {
   const [message, setMessage] = useState("");
+  const [sharePending, setSharePending] = useState(false);
+  const sharePendingRef = useRef(false);
 
   async function copyEventLink(url: string) {
     if (navigator.clipboard?.writeText) {
@@ -32,6 +35,9 @@ export function EventActions({
   }
 
   async function shareEvent() {
+    if (sharePendingRef.current) return;
+    sharePendingRef.current = true;
+    setSharePending(true);
     const url = window.location.href;
     setMessage("");
     try {
@@ -55,6 +61,9 @@ export function EventActions({
       } catch {
         setMessage("Sharing is unavailable in this browser.");
       }
+    } finally {
+      sharePendingRef.current = false;
+      setSharePending(false);
     }
   }
 
@@ -86,42 +95,48 @@ export function EventActions({
         <button
           type="button"
           onClick={shareEvent}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#9A772E]"
+          disabled={sharePending}
+          aria-busy={sharePending}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#9A772E] disabled:cursor-wait disabled:opacity-70"
         >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 20 20"
-            fill="none"
-            className="size-4"
-          >
-            <circle
-              cx="15"
-              cy="4"
-              r="2"
-              stroke="currentColor"
-              strokeWidth="1.4"
-            />
-            <circle
-              cx="5"
-              cy="10"
-              r="2"
-              stroke="currentColor"
-              strokeWidth="1.4"
-            />
-            <circle
-              cx="15"
-              cy="16"
-              r="2"
-              stroke="currentColor"
-              strokeWidth="1.4"
-            />
-            <path
-              d="m7 9 6-4M7 11l6 4"
-              stroke="currentColor"
-              strokeWidth="1.4"
-            />
-          </svg>
-          Share event
+          {sharePending ? (
+            <Spinner />
+          ) : (
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              fill="none"
+              className="size-4"
+            >
+              <circle
+                cx="15"
+                cy="4"
+                r="2"
+                stroke="currentColor"
+                strokeWidth="1.4"
+              />
+              <circle
+                cx="5"
+                cy="10"
+                r="2"
+                stroke="currentColor"
+                strokeWidth="1.4"
+              />
+              <circle
+                cx="15"
+                cy="16"
+                r="2"
+                stroke="currentColor"
+                strokeWidth="1.4"
+              />
+              <path
+                d="m7 9 6-4M7 11l6 4"
+                stroke="currentColor"
+                strokeWidth="1.4"
+              />
+            </svg>
+          )}
+          {sharePending ? "Sharing…" : "Share event"}
         </button>
         <button
           type="button"

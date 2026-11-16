@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { AdminNotice } from "../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import type { StandardAdminEntry } from "@/lib/admin-invitation-data";
 import type { InvitationActionState } from "./actions";
 
@@ -84,13 +85,14 @@ export function StandardAdminList({
                   name="targetUserId"
                   value={admin.userId}
                 />
-                <button
+                <LoadingButton
                   type="submit"
+                  pendingLabel="Deactivating administrator…"
                   disabled={deactivatePending}
-                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-sm font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-sm font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
                 >
-                  {deactivatePending ? "Deactivating…" : "Deactivate"}
-                </button>
+                  Deactivate
+                </LoadingButton>
               </form>
             </li>
           ))}
@@ -126,13 +128,14 @@ export function StandardAdminList({
                       name="targetUserId"
                       value={admin.userId}
                     />
-                    <button
+                    <LoadingButton
                       type="submit"
+                      pendingLabel="Reactivating administrator…"
                       disabled={reactivatePending}
-                      className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#CFE5D5] px-4 text-sm font-semibold text-[#3C704B] transition hover:bg-[#F0F8F2] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3C704B]"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#CFE5D5] px-4 text-sm font-semibold text-[#3C704B] transition hover:bg-[#F0F8F2] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3C704B]"
                     >
-                      {reactivatePending ? "Reactivating…" : "Reactivate"}
-                    </button>
+                      Reactivate
+                    </LoadingButton>
                   </form>
                 </div>
               </li>

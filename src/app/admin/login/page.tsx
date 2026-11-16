@@ -245,6 +245,7 @@
 // }
 
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { signInAction } from "./actions";
@@ -269,6 +270,7 @@ type AdminLoginPageProps = {
 export default async function AdminLoginPage({
   searchParams,
 }: AdminLoginPageProps) {
+  await connection();
   const access = await getAdminAccess();
 
   const { error, invitationToken, passwordReset } =

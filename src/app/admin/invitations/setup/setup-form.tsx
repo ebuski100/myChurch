@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { AdminNotice } from "../../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 
 export type SetupInvitationActionState = {
   message?: string;
@@ -105,13 +106,15 @@ export function SetupInvitationForm({
           />
         </div>
 
-        <button
+        <LoadingButton
           type="submit"
+          pending={pending}
+          pendingLabel="Setting up account…"
           disabled={pending}
           className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white shadow-[0_5px_16px_rgba(16,27,51,0.14)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#1B2B49] hover:shadow-[0_9px_22px_rgba(16,27,51,0.2)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#A7894B] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {pending ? "Setting up…" : "Set password and join"}
-        </button>
+          Set password and join
+        </LoadingButton>
       </form>
       <p className="mt-4 text-xs leading-5 text-[#98A2B3]">
         Wrong account? Sign out and open your invitation link again

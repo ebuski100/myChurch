@@ -136,6 +136,7 @@
 import { useActionState } from "react";
 import { AdminNotice } from "../admin-notice";
 import type { ManagedInvitation } from "@/lib/admin-invitation-data";
+import { LoadingButton } from "@/components/ui/button";
 import {
   deletePastInvitationAction,
   type InvitationActionState,
@@ -235,13 +236,14 @@ export function InvitationList({
                   name="invitationId"
                   value={invitation.id}
                 />
-                <button
+                <LoadingButton
                   type="submit"
+                  pendingLabel="Revoking invitation…"
                   disabled={revokePending}
-                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-sm font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-sm font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
                 >
-                  {revokePending ? "Revoking…" : "Revoke"}
-                </button>
+                  Revoke
+                </LoadingButton>
               </form>
             </li>
           ))}
@@ -290,13 +292,14 @@ export function InvitationList({
                     value={invitation.id}
                   />
 
-                  <button
+                  <LoadingButton
                     type="submit"
+                    pendingLabel="Deleting invitation…"
                     disabled={deletePending}
-                    className="inline-flex min-h-9 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-xs font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#E4B8B8] px-4 text-xs font-semibold text-[#8A4242] transition hover:bg-[#FBF5F5] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8A4242]"
                   >
-                    {deletePending ? "Deleting…" : "Delete"}
-                  </button>
+                    Delete
+                  </LoadingButton>
                 </form>
               </li>
             ))}

@@ -25,7 +25,7 @@ function fakeTimers() {
   };
 }
 
-test("admin notice timer dismisses after the configured three seconds", () => {
+test("admin notice timer dismisses after the configured five seconds", () => {
   const timers = fakeTimers();
   let dismissed = 0;
   const timer = createAdminNoticeTimer(() => dismissed++, timers.host);
@@ -33,7 +33,7 @@ test("admin notice timer dismisses after the configured three seconds", () => {
 
   assert.equal(timers.pending.size, 1);
   const [id, entry] = [...timers.pending.entries()][0];
-  assert.equal(entry.milliseconds, 3000);
+  assert.equal(entry.milliseconds, 5000);
   timers.fire(id);
   assert.equal(dismissed, 1);
   assert.equal(timers.pending.size, 0);

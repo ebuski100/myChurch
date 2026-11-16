@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useActionState } from "react";
 import Link from "next/link";
+import { LoadingButton, Spinner } from "@/components/ui/button";
 import { resetAdminPasswordAction } from "./actions";
 import type { ResetPasswordActionState } from "@/lib/admin-password-recovery";
 
@@ -109,12 +110,14 @@ export default function ResetPasswordClient({
         </h1>
 
         {status === "checking" && (
-          <p
+          <div
             role="status"
-            className="mt-4 text-sm leading-6 text-[#737985]"
+            aria-busy="true"
+            className="mt-4 flex items-center gap-3 text-sm leading-6 text-[#737985]"
           >
+            <Spinner className="text-[#9A772E]" />
             Verifying your recovery session…
-          </p>
+          </div>
         )}
 
         {status === "invalid" && (
@@ -182,7 +185,11 @@ export default function ResetPasswordClient({
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    className="absolute inset-y-0 right-3 px-2 text-xs font-semibold text-[#8A7447]"
+                    aria-label={
+                      showPassword ? "Hide passwords" : "Show passwords"
+                    }
+                    aria-pressed={showPassword}
+                    className="absolute inset-y-0 right-3 rounded-md px-2 text-xs font-semibold text-[#8A7447] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A7894B]"
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
@@ -208,13 +215,15 @@ export default function ResetPasswordClient({
                 />
               </div>
 
-              <button
+              <LoadingButton
                 type="submit"
+                pending={pending}
+                pendingLabel="Updating password…"
                 disabled={pending}
                 className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white transition hover:bg-[#1B2B49] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {pending ? "Updating password…" : "Update password"}
-              </button>
+                Update password
+              </LoadingButton>
             </form>
           </>
         )}

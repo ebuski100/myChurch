@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { AdminNotice } from "../../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import type { InvitationActionState } from "../actions";
 
 const initialState: InvitationActionState = {};
@@ -53,13 +54,15 @@ export function AcceptInvitationForm({
 
       <form action={formAction} className="mt-6">
         <input type="hidden" name="token" value={token} />
-        <button
+        <LoadingButton
           type="submit"
+          pending={pending}
+          pendingLabel="Accepting invitation…"
           disabled={pending}
           className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white transition hover:bg-[#263653] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
         >
-          {pending ? "Accepting…" : "Accept invitation"}
-        </button>
+          Accept invitation
+        </LoadingButton>
       </form>
       <p className="mt-4 text-xs leading-5 text-[#98A2B3]">
         Wrong account? Sign out and sign back in with the invited

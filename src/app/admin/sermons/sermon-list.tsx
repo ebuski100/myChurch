@@ -10,6 +10,7 @@ import type {
 } from "@/lib/admin-sermon-data";
 import type { SermonMediaType } from "@/lib/admin-sermon-validation";
 import { AdminNotice } from "../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import {
   bulkSermonLifecycleAction,
   type BulkSermonActionState,
@@ -148,7 +149,7 @@ function SermonCard({
       <div className="mt-5 border-t border-[#EAECF0] pt-4">
         <Link
           href={`/admin/sermons/${encodeURIComponent(sermon.id)}/edit`}
-          className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+          className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
         >
           Edit details
         </Link>
@@ -163,6 +164,9 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
   const [mediaType, setMediaType] = useState<MediaFilter>("all");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkCommand, setBulkCommand] = useState<
+    "archive" | "restore" | "cancel_schedule" | null
+  >(null);
   const [bulkState, bulkAction, bulkPending] = useActionState(
     bulkSermonLifecycleAction,
     initialBulkState,
@@ -359,48 +363,57 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
-              <button
+              <LoadingButton
                 type="submit"
                 name="command"
                 value="archive"
+                onClick={() => setBulkCommand("archive")}
+                pending={bulkPending && bulkCommand === "archive"}
+                pendingLabel="Archiving sermons…"
                 disabled={
                   bulkPending ||
                   !selectedSermons.some(
                     (sermon) => sermon.status !== "archived",
                   )
                 }
-                className="min-h-10 rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                className="min-h-11 rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white disabled:opacity-50"
               >
-                {bulkPending ? "Working…" : "Archive selected"}
-              </button>
-              <button
+                Archive selected
+              </LoadingButton>
+              <LoadingButton
                 type="submit"
                 name="command"
                 value="restore"
+                onClick={() => setBulkCommand("restore")}
+                pending={bulkPending && bulkCommand === "restore"}
+                pendingLabel="Restoring sermons…"
                 disabled={
                   bulkPending ||
                   !selectedSermons.some(
                     (sermon) => sermon.status === "archived",
                   )
                 }
-                className="min-h-10 rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#344054] disabled:opacity-50"
+                className="min-h-11 rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#344054] disabled:opacity-50"
               >
                 Restore selected as drafts
-              </button>
-              <button
+              </LoadingButton>
+              <LoadingButton
                 type="submit"
                 name="command"
                 value="cancel_schedule"
+                onClick={() => setBulkCommand("cancel_schedule")}
+                pending={bulkPending && bulkCommand === "cancel_schedule"}
+                pendingLabel="Cancelling schedules…"
                 disabled={
                   bulkPending ||
                   !selectedSermons.some(
                     (sermon) => sermon.status === "scheduled",
                   )
                 }
-                className="min-h-10 rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#344054] disabled:opacity-50"
+                className="min-h-11 rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#344054] disabled:opacity-50"
               >
                 Cancel selected schedules
-              </button>
+              </LoadingButton>
             </div>
             {(bulkState.message || bulkState.items) && (
               <AdminNotice
@@ -454,7 +467,7 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
             </p>
             <Link
               href="/sermons"
-              className="mt-5 inline-flex min-h-10 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
             >
               Preview public sermon library
             </Link>
@@ -511,7 +524,7 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
                   type="button"
                   disabled={currentPage <= 1}
                   onClick={() => setPage(currentPage - 1)}
-                  className="min-h-10 rounded-full border border-[#D0D5DD] px-4 text-sm disabled:opacity-50"
+                  className="min-h-11 rounded-full border border-[#D0D5DD] px-4 text-sm disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -522,7 +535,7 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
                   type="button"
                   disabled={currentPage >= pageCount}
                   onClick={() => setPage(currentPage + 1)}
-                  className="min-h-10 rounded-full border border-[#D0D5DD] px-4 text-sm disabled:opacity-50"
+                  className="min-h-11 rounded-full border border-[#D0D5DD] px-4 text-sm disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -540,7 +553,7 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
             <button
               type="button"
               onClick={() => resetFilter("", "all", "all")}
-              className="mt-4 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
             >
               Clear filters
             </button>

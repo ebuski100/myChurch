@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminAccess } from "@/lib/admin-auth";
@@ -9,6 +10,7 @@ export const metadata: Metadata = { title: "New Sermon | Admin | VictoryCity Rev
 export const instant = false;
 
 export default async function NewAdminSermonPage() {
+  await connection();
   const access = await getAdminAccess();
   if (access.status === "unauthenticated") redirect("/admin/login");
   if (access.status === "forbidden") redirect("/admin/login?error=not_admin");

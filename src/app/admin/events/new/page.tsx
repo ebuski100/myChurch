@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminAccess } from "@/lib/admin-auth";
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function NewAdminEventPage() {
+  await connection();
   const access = await getAdminAccess();
   if (access.status === "unauthenticated") redirect("/admin/login");
   if (access.status === "forbidden")

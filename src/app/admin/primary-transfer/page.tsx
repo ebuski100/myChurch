@@ -59,7 +59,7 @@ function RestrictedPanel() {
       <Link
         href="/admin"
         prefetch={false}
-        className="mt-5 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+        className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
       >
         Back to overview
       </Link>
@@ -144,8 +144,14 @@ export default async function PrimaryTransferPage() {
           ) : candidatesResult.candidates.length === 0 ? (
             <div className="rounded-xl border border-[#E4E7EC] bg-[#F8F9FB] px-4 py-3 text-sm leading-6 text-[#475467]">
               There are no active standard administrators to hand the
-              seat to. Enrol an administrator first, then return to
-              this screen.
+              seat to.{" "}
+              <Link
+                href="/admin/invitations"
+                className="font-semibold text-[#101B33] underline decoration-[#D9B66D] underline-offset-2 hover:text-[#785B1F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+              >
+                Invite a standard administrator
+              </Link>{" "}
+              first, then return to this screen.
             </div>
           ) : (
             <PrimaryTransferForm

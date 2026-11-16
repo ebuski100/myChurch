@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { AdminNotice } from "../../../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import {
   changeSermonLifecycleAction,
   type PublicationActionState,
@@ -85,13 +86,15 @@ function LifecycleForm({
         />
         <span>{confirmation[command]}</span>
       </label>
-      <button
+      <LoadingButton
         type="submit"
+        pending={pending}
+        pendingLabel="Updating sermon…"
         disabled={pending}
-        className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+        className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
       >
-        {pending ? "Saving status…" : labels[command]}
-      </button>
+        {labels[command]}
+      </LoadingButton>
       <span className="sr-only" aria-live="polite">
         {pending ? "Updating sermon status" : ""}
       </span>

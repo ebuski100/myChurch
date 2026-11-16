@@ -119,7 +119,7 @@ export default async function AdminEventsPage({
             </p>
             <Link
               href="/admin/events"
-              className="mt-5 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white"
             >
               Try again
             </Link>
@@ -176,7 +176,7 @@ export default async function AdminEventsPage({
                   <div className="mt-5 border-t border-[#EAECF0] pt-4">
                     <Link
                       href={`/admin/events/${encodeURIComponent(event.id)}/edit`}
-                      className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
                     >
                       Edit event
                     </Link>

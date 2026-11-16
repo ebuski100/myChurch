@@ -300,7 +300,7 @@ export default async function AdminDepartmentDetailPage({
             </p>
             <Link
               href={`/admin/departments/${slug}`}
-              className="mt-5 inline-flex min-h-10 items-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white"
+              className="mt-5 inline-flex min-h-11 items-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white"
             >
               Try again
             </Link>
@@ -398,14 +398,14 @@ export default async function AdminDepartmentDetailPage({
               <Link
                 href={`/departments/${department.slug}`}
                 target="_blank"
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#D0D5DD] bg-white px-4 text-sm font-semibold text-[#344054] hover:border-[#D9B66D]"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] bg-white px-4 text-sm font-semibold text-[#344054] hover:border-[#D9B66D]"
               >
                 Preview public page ↗
               </Link>
 
               <Link
                 href={`/admin/departments/${department.slug}/edit`}
-                className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653]"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653]"
               >
                 Edit department
               </Link>

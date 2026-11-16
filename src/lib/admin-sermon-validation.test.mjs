@@ -12,6 +12,9 @@ function form(overrides = {}) {
     series: "Grace",
     mediaType: "audio",
     youtubeUrl: "",
+    durationHours: "",
+    durationMinutes: "",
+    durationSeconds: "",
     ...overrides,
   };
   for (const [key, value] of Object.entries(values)) data.set(key, value);
@@ -30,6 +33,10 @@ test("audio sermons validate without a YouTube URL", () => {
       series: "Grace",
       mediaType: "audio",
       youtubeUrl: null,
+      durationHours: 0,
+      durationMinutes: 0,
+      durationSeconds: 0,
+      durationTotalSeconds: null,
     },
   });
 });
@@ -39,6 +46,9 @@ test("video sermons require a YouTube URL and keep it verbatim", () => {
     form({
       mediaType: "video",
       youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+      durationHours: "0",
+      durationMinutes: "1",
+      durationSeconds: "30",
     }),
   );
   assert.equal(result.ok, true);
@@ -48,6 +58,24 @@ test("video sermons require a YouTube URL and keep it verbatim", () => {
       result.value.youtubeUrl,
       "https://youtu.be/dQw4w9WgXcQ",
     );
+    assert.equal(result.value.durationTotalSeconds, 90);
+  }
+});
+
+test("video sermons require a positive duration", () => {
+  for (const duration of [
+    { durationHours: "", durationMinutes: "", durationSeconds: "" },
+    { durationHours: "0", durationMinutes: "0", durationSeconds: "0" },
+  ]) {
+    const result = validateSermonForm(
+      form({
+        mediaType: "video",
+        youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+        ...duration,
+      }),
+    );
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.ok(result.errors.durationSeconds);
   }
 });
 

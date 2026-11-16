@@ -256,7 +256,7 @@ export default async function AdminPage({
             </p>
             <Link
               href="/"
-              className="mt-6 inline-flex min-h-10 items-center gap-2 rounded-full bg-[#D9B66D] px-4 text-sm font-semibold text-[#101B33] transition-colors hover:bg-[#E8CC8B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+              className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D9B66D] px-4 text-sm font-semibold text-[#101B33] transition-colors hover:bg-[#E8CC8B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             >
               Preview website <span aria-hidden="true">↗</span>
             </Link>

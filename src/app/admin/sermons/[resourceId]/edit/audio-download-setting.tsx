@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { AdminNotice } from "../../../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import {
   updateSermonAudioDownloadAction,
   type AudioDownloadActionState,
@@ -71,15 +72,17 @@ export function AudioDownloadSetting({
             {savedValue ? "downloads enabled" : "downloads disabled"}.
           </p>
         </div>
-        <button
+        <LoadingButton
           type="submit"
+          pending={pending}
+          pendingLabel="Saving download setting…"
           disabled={
             !hasAudioAsset || pending || enabled === savedValue
           }
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
         >
-          {pending ? "Saving…" : "Save download setting"}
-        </button>
+          Save download setting
+        </LoadingButton>
       </div>
       {state.message && (
         <AdminNotice

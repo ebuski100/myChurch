@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { signOutAction } from "./actions";
 import Image from "next/image";
+import { LoadingButton } from "@/components/ui/button";
 export type AdminWorkspaceSection =
   | "overview"
   | "sermons"
@@ -134,9 +135,10 @@ function SignOutButton({ compact = false }: { compact?: boolean }) {
 
   return (
     <form action={signOutAction}>
-      <button
+      <LoadingButton
         type="submit"
-        className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 ${colors} ${compact ? "px-3" : "w-full"}`}
+        pendingLabel="Signing out…"
+        className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 ${colors} ${compact ? "px-3" : "w-full"}`}
       >
         <svg
           aria-hidden="true"
@@ -153,7 +155,7 @@ function SignOutButton({ compact = false }: { compact?: boolean }) {
           />
         </svg>
         Sign out
-      </button>
+      </LoadingButton>
     </form>
   );
 }
@@ -184,7 +186,7 @@ function AdminNavigation({
             aria-current={active ? "page" : undefined}
             className={
               mobile
-                ? `inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] ${active ? "bg-[#101B33] text-white" : "border border-[#E4E7EC] bg-white text-[#475467] hover:border-[#D9B66D] hover:text-[#101B33]"}`
+                ? `inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] ${active ? "bg-[#101B33] text-white" : "border border-[#E4E7EC] bg-white text-[#475467] hover:border-[#D9B66D] hover:text-[#101B33]"}`
                 : `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D] ${active ? "bg-white/10 text-white" : "text-white/65 hover:bg-white/5 hover:text-white"}`
             }
           >
@@ -209,8 +211,8 @@ function PublicWebsiteLink({ mobile = false }: { mobile?: boolean }) {
       href="/"
       className={
         mobile
-          ? "inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-sm font-medium text-[#475467] transition-colors hover:text-[#101B33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] lg:hidden"
-          : "mb-4 flex min-h-10 items-center gap-3 px-3 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D]"
+          ? "inline-flex min-h-11 items-center gap-2 rounded-lg px-1 text-sm font-medium text-[#475467] transition-colors hover:text-[#101B33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] lg:hidden"
+          : "mb-4 flex min-h-11 items-center gap-3 px-3 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E6C77D]"
       }
     >
       <svg

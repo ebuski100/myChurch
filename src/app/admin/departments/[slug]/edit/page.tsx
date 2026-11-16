@@ -341,6 +341,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LoadingButton } from "@/components/ui/button";
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 
@@ -752,12 +753,13 @@ export default async function EditDepartmentPage({
               Cancel
             </Link>
 
-            <button
+            <LoadingButton
               type="submit"
+              pendingLabel="Saving department…"
               className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#263653] focus:outline-none focus:ring-2 focus:ring-[#B99648] focus:ring-offset-2"
             >
               Save department
-            </button>
+            </LoadingButton>
           </div>
         </form>
       </div>

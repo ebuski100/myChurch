@@ -9,7 +9,6 @@ import {
 import {
   FamilyCtaArtwork,
   MissionIcon,
-  StoryChurchIllustration,
 } from "./_components/about-artwork";
 
 export const metadata: Metadata = {

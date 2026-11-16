@@ -34,7 +34,7 @@ async function SermonRecords() {
         </p>
         <Link
           href="/admin/sermons"
-          className="mt-5 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
         >
           Try again
         </Link>
@@ -143,7 +143,7 @@ export default async function AdminSermonsPage({
             </div>
             <Link
               href="/sermons"
-              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-[#D9B66D] px-4 text-sm font-semibold text-[#101B33] transition-colors hover:bg-[#E8CC8B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:self-auto"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-[#D9B66D] px-4 text-sm font-semibold text-[#101B33] transition-colors hover:bg-[#E8CC8B] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:self-auto"
             >
               Preview public library <span aria-hidden="true">↗</span>
             </Link>

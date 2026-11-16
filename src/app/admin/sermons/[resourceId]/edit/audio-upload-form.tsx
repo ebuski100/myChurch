@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AdminNotice } from "../../../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import {
   formatSermonAudioSize,
   MAX_SERMON_AUDIO_BYTES,
@@ -202,17 +203,15 @@ export function AudioUploadForm({
               {message}
             </p>
           ))}
-        <button
+        <LoadingButton
           type="submit"
+          pending={pending}
+          pendingLabel="Uploading audio…"
           disabled={pending}
           className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
         >
-          {pending
-            ? "Uploading audio…"
-            : hasAudioAsset
-              ? "Upload replacement audio"
-              : "Upload audio"}
-        </button>
+          {hasAudioAsset ? "Upload replacement audio" : "Upload audio"}
+        </LoadingButton>
         <span className="sr-only" aria-live="polite">
           {pending ? "Audio upload in progress" : ""}
         </span>

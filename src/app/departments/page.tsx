@@ -8,7 +8,6 @@ import {
   type PublicDepartment,
 } from "@/lib/department-data";
 import {
-  ChoirSceneIllustration,
   CtaCrossArtwork,
   DepartmentIcon,
   HeroCommunityIllustration,

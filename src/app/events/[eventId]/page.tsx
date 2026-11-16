@@ -89,7 +89,7 @@ export default async function PublicEventPage({
           <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
             <Link
               href="/events"
-              className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-white/70 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E6C77D]"
+              className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-white/70 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E6C77D]"
             >
               <span aria-hidden="true">←</span> All events
             </Link>

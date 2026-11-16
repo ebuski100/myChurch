@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { LoadingButton } from "@/components/ui/button";
 import { passwordRecoveryAction } from "./actions";
 import type { ForgotPasswordActionState } from "@/lib/admin-password-recovery";
 
@@ -59,13 +60,14 @@ export default function ForgotPasswordClient() {
                   className="h-12 w-full rounded-xl border border-[#DFE1E5] bg-[#FCFCFB] px-4 text-sm text-[#101B33] outline-none transition placeholder:text-[#B0B4BC] focus:border-[#A7894B] focus:bg-white focus:ring-4 focus:ring-[#D9B66D]/15"
                 />
               </div>
-              <button
+              <LoadingButton
                 type="submit"
+                pendingLabel="Requesting recovery code…"
                 disabled={pending}
                 className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white transition hover:bg-[#1B2B49] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#A7894B] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {pending ? "Requesting code…" : "Send recovery code"}
-              </button>
+                Send recovery code
+              </LoadingButton>
             </form>
           </>
         ) : (
@@ -111,37 +113,40 @@ export default function ForgotPasswordClient() {
                   Enter the code exactly as it appears in the email.
                 </p>
               </div>
-              <button
+              <LoadingButton
                 type="submit"
+                pendingLabel="Verifying recovery code…"
                 disabled={pending}
                 className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white transition hover:bg-[#1B2B49] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {pending ? "Verifying code…" : "Verify code"}
-              </button>
+                Verify code
+              </LoadingButton>
             </form>
 
             <div className="mt-4 flex items-center justify-between gap-4">
               <form action={formAction}>
                 <input type="hidden" name="intent" value="request" />
                 <input type="hidden" name="email" value={state.email ?? ""} />
-                <button
+                <LoadingButton
                   type="submit"
+                  pendingLabel="Requesting another code…"
                   disabled={pending}
                   className="text-sm font-semibold text-[#8A7447] hover:text-[#101B33] disabled:opacity-50"
                 >
                   Send another code
-                </button>
+                </LoadingButton>
               </form>
               <form action={formAction}>
                 <input type="hidden" name="intent" value="change-email" />
                 <input type="hidden" name="email" value={state.email ?? ""} />
-                <button
+                <LoadingButton
                   type="submit"
+                  pendingLabel="Changing email…"
                   disabled={pending}
                   className="text-sm font-semibold text-[#8A7447] hover:text-[#101B33] disabled:opacity-50"
                 >
                   Change email
-                </button>
+                </LoadingButton>
               </form>
             </div>
           </>

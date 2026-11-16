@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { createDepartmentMemberAction } from "./actions";
 import { MemberPhotoInput } from "./member-photo-input";
+import { LoadingButton } from "@/components/ui/button";
 
 const inputClass =
   "mt-2 block w-full rounded-xl border border-[#D0D5DD] bg-white px-3.5 py-3 text-sm text-[#101828] outline-none transition placeholder:text-[#98A2B3] focus:border-[#B99648] focus:ring-2 focus:ring-[#B99648]/15";
@@ -20,18 +21,45 @@ export function AddMemberModal({
   departmentName: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
+    const trigger = triggerRef.current;
+    closeRef.current?.focus();
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      trigger?.focus();
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -48,8 +76,11 @@ export function AddMemberModal({
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setIsOpen(true)}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full  px-5 py-2.5 text-sm font-semibold  transition  focus:outline-none focus:ring-2 focus:ring-[#B99648] focus:ring-offset-2 mt-5      bg-[#D9B66D]  text-[#101B33] hover:bg-[#E8CC8B] cursor-pointer "
       >
         <span aria-hidden="true" className="text-lg leading-none">
@@ -68,9 +99,12 @@ export function AddMemberModal({
           }}
         >
           <section
+            id="add-member-dialog"
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="add-member-title"
+            aria-describedby="add-member-description"
             className="max-h-[94dvh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
           >
             <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[#EAECF0] bg-white px-5 py-5 sm:px-7">
@@ -84,16 +118,20 @@ export function AddMemberModal({
                 >
                   Add a member
                 </h2>
-                <p className="mt-1 text-sm text-[#667085]">
+                <p
+                  id="add-member-description"
+                  className="mt-1 text-sm text-[#667085]"
+                >
                   Add someone to {departmentName}.
                 </p>
               </div>
 
               <button
+                ref={closeRef}
                 type="button"
                 onClick={() => setIsOpen(false)}
                 aria-label="Close add member dialog"
-                className="grid size-10 shrink-0 place-items-center rounded-full border border-[#EAECF0] text-xl text-[#475467] transition hover:bg-[#F9FAFB]"
+                className="grid size-11 shrink-0 place-items-center rounded-full border border-[#EAECF0] text-xl text-[#475467] transition hover:bg-[#F9FAFB]"
               >
                 ×
               </button>
@@ -206,12 +244,13 @@ export function AddMemberModal({
                   Cancel
                 </button>
 
-                <button
+                <LoadingButton
                   type="submit"
+                  pendingLabel="Creating member…"
                   className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#263653] focus:outline-none focus:ring-2 focus:ring-[#B99648] focus:ring-offset-2"
                 >
                   Create member
-                </button>
+                </LoadingButton>
               </div>
             </form>
           </section>

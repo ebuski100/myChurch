@@ -6,7 +6,7 @@ export type AdminNoticeTimerHost = {
 export function createAdminNoticeTimer(
   onDismiss: () => void,
   host: AdminNoticeTimerHost,
-  milliseconds = 3000,
+  milliseconds = 5000,
 ) {
   let handle: unknown;
 

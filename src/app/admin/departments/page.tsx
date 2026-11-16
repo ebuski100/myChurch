@@ -145,15 +145,30 @@ export default async function AdminDepartmentsPage({
               Departments could not be loaded
             </h2>
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#667085]">
-              Check that the Stage 1 migration is applied to your
-              local Supabase instance and that your administrator
-              session is valid.
+              Please try again. If the department list remains
+              unavailable, contact a project administrator for help.
             </p>
             <Link
               href="/admin/departments"
-              className="mt-5 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-4 text-sm font-semibold text-white"
             >
               Try again
+            </Link>
+          </section>
+        ) : result.departments.length === 0 ? (
+          <section className="rounded-2xl border border-dashed border-[#C9CDD5] bg-white px-6 py-12 text-center">
+            <h2 className="text-lg font-semibold text-[#101B33]">
+              No departments are available
+            </h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-[#667085]">
+              The department list is empty. Ask a project administrator
+              to verify the department data.
+            </p>
+            <Link
+              href="/admin"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+            >
+              Return to admin overview
             </Link>
           </section>
         ) : (
@@ -221,14 +236,14 @@ export default async function AdminDepartmentsPage({
                     <div className="mt-auto grid grid-cols-2 gap-3 pt-6">
                       <Link
                         href={`/admin/departments/${department.slug}`}
-                        className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#101B33] px-3 text-center text-sm font-semibold text-white transition-colors hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+                        className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#101B33] px-3 text-center text-sm font-semibold text-white transition-colors hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
                       >
                         View
                       </Link>
 
                       <Link
                         href={`/admin/departments/${department.slug}/edit`}
-                        className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#D0D5DD] bg-white px-3 text-center text-sm font-semibold text-[#344054] transition-colors hover:border-[#D9B66D] hover:bg-[#FFFEFB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+                        className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D0D5DD] bg-white px-3 text-center text-sm font-semibold text-[#344054] transition-colors hover:border-[#D9B66D] hover:bg-[#FFFEFB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
                       >
                         Edit
                       </Link>

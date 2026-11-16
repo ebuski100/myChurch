@@ -28,7 +28,7 @@ function InvalidTokenPanel({ message }: { message: string }) {
         </p>
         <Link
           href="/admin/login"
-          className="mt-6 inline-flex min-h-10 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+          className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
         >
           Go to admin sign in
         </Link>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AdminNotice } from "../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import {
   MAX_EVENT_IMAGE_BYTES,
   validateEventImageUpload,
@@ -31,7 +32,10 @@ export function EventPosterUpload({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const initialAssetId = useRef(posterAssetId);
-  const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "upload" | "remove" | null
+  >(null);
+  const pending = pendingAction !== null;
   const [progress, setProgress] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
@@ -76,11 +80,20 @@ export function EventPosterUpload({
       return;
     }
 
+    setPendingAction("upload");
     const token = uploadToken ?? crypto.randomUUID();
     if (!uploadToken) setUploadToken(token);
-    const prefix = new Uint8Array(
-      await file.slice(0, 12).arrayBuffer(),
-    );
+    let prefix: Uint8Array;
+    try {
+      prefix = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+    } catch {
+      setPendingAction(null);
+      setNotice({
+        kind: "error",
+        message: "The selected image could not be read. Choose it again and retry.",
+      });
+      return;
+    }
     const validation = validateEventImageUpload(
       file.name,
       file.size,
@@ -96,10 +109,10 @@ export function EventPosterUpload({
               ? "Choose an image with a valid filename."
               : "Choose a valid JPG, PNG, or WebP image.",
       });
+      setPendingAction(null);
       return;
     }
 
-    setPending(true);
     setProgress(0);
     setNotice(null);
     try {
@@ -203,14 +216,14 @@ export function EventPosterUpload({
           "The event image upload could not be completed. Check your connection and try again.",
       });
     } finally {
-      setPending(false);
+      setPendingAction(null);
     }
   }
 
   async function removePoster() {
     if (pending || (!currentAssetId && !selectedFile)) return;
     if (currentAssetId && currentAssetId !== initialAssetId.current) {
-      setPending(true);
+      setPendingAction("remove");
       try {
         const removed = await deleteStagedPoster(currentAssetId);
         if (!removed) {
@@ -229,7 +242,7 @@ export function EventPosterUpload({
         });
         return;
       } finally {
-        setPending(false);
+        setPendingAction(null);
       }
     }
     setCurrentAssetId(null);
@@ -361,27 +374,27 @@ export function EventPosterUpload({
           />
         )}
         <div className="flex flex-wrap gap-2">
-          <button
+          <LoadingButton
             type="button"
             onClick={uploadPoster}
+            pending={pendingAction === "upload"}
+            pendingLabel="Uploading poster…"
             disabled={pending || !selectedFile}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[#D0D5DD] px-5 text-sm font-semibold text-[#344054] hover:bg-[#F8F9FB] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] sm:w-auto"
           >
-            {pending
-              ? "Uploading…"
-              : currentAssetId
-                ? "Upload replacement"
-                : "Upload poster"}
-          </button>
+            {currentAssetId ? "Upload replacement" : "Upload poster"}
+          </LoadingButton>
           {(currentAssetId || selectedFile) && (
-            <button
+            <LoadingButton
               type="button"
               onClick={removePoster}
+              pending={pendingAction === "remove"}
+              pendingLabel="Removing poster…"
               disabled={pending}
               className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[#D0D5DD] px-5 text-sm font-semibold text-[#475467] hover:bg-[#F8F9FB] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] sm:w-auto"
             >
               Remove poster
-            </button>
+            </LoadingButton>
           )}
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import type { PrimaryTransferCandidate } from "@/lib/primary-transfer";
 import { AdminNotice } from "../admin-notice";
+import { LoadingButton } from "@/components/ui/button";
 import type { PrimaryTransferActionState } from "./actions";
 
 const initialState: PrimaryTransferActionState = {};
@@ -107,14 +108,15 @@ export function PrimaryTransferForm({
         </span>
       </label>
 
-      <button
+      <LoadingButton
         type="submit"
+        pending={pending}
+        pendingLabel="Transferring primary role…"
         disabled={!canSubmit}
-        aria-busy={pending}
         className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#101B33] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#263653] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] disabled:cursor-not-allowed disabled:bg-[#98A2B3]"
       >
-        {pending ? "Transferring…" : "Transfer primary role"}
-      </button>
+        Transfer primary role
+      </LoadingButton>
     </form>
   );
 }

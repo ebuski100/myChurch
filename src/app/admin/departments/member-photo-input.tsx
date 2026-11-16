@@ -48,7 +48,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const inputClass =
-  "block w-full text-sm text-[#475467] file:mr-3 file:min-h-10 file:rounded-full file:border-0 file:bg-[#101B33] file:px-4 file:text-xs file:font-semibold file:text-white hover:file:bg-[#263653]";
+  "block w-full text-sm text-[#475467] file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-[#101B33] file:px-4 file:text-xs file:font-semibold file:text-white hover:file:bg-[#263653]";
 
 export function MemberPhotoInput({
   id,
