@@ -246,6 +246,24 @@ export function SiteFooter() {
               Follow us on Facebook
               <ArrowIcon />
             </a>
+
+            <a
+              href="https://t.me/+K1NdakeUQM3NGE0"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex min-h-11 items-center gap-2 text-white/65 hover:text-white ${focusClass}`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="size-4"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9.5"/>
+                <path d="M8 13.5c1.4-1.1 3.5-1.1 4.9 0l3.9 3.2c1.5-.8 3-1.9 4.9-1.5s3 .7 4.9 1.5l3.9-3.2c1.5 .8 3 1.9 4.9 1.5s3-.7 4.9-1.5l-4-3.6c1.1-1.4 0-3-1.9-3h-3.4c-.5 0-1 .9-1 2.1l-4 3.6c-1.1 1.4-1.9 3-1.9 3h-3.4c-.9 0-1.5-1.6-1.9-3l-4-3.6ZM12 3L2 12h3v9H2V12zm12 0L22 12h-3v9h-2V12Z" />
+              </svg>
+              Telegram
+            </a>
           </div>
         </div>
       </div>
