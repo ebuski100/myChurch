@@ -300,8 +300,8 @@ export default async function AdminPage({
                 Workspace shortcuts
               </h2>
               <p className="mt-2 text-sm leading-6 text-[#667085]">
-                Manage ministry content, review the archive, or preview
-                public pages.
+                Manage ministry content, review the archive, or
+                preview public pages.
               </p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
@@ -342,20 +342,29 @@ export default async function AdminPage({
                 icon="overview"
               />
               {access.role === "primary" && (
-                <PreviewLink
-                  href="/admin/invitations"
-                  label="Administrator invitations"
-                  detail="Invite standard admins and manage access"
-                  icon="departments"
-                />
-              )}
-              {access.role === "primary" && (
-                <PreviewLink
-                  href="/admin/primary-transfer"
-                  label="Primary role transfer"
-                  detail="Hand the primary seat to another administrator"
-                  icon="departments"
-                />
+                <div className="mt-8 space-y-4">
+                  <h3 className="text-sm font-medium uppercase tracking-[0.12em] text-[#785B1F] mb-3">
+                    Primary Administrator Controls
+                  </h3>
+                  <div className="grid gap-4 ">
+                    {access.role === "primary" && (
+                      <PreviewLink
+                        href="/admin/invitations"
+                        label="Administrator invitations"
+                        detail="Invite standard admins and manage access"
+                        icon="departments"
+                      />
+                    )}
+                    {access.role === "primary" && (
+                      <PreviewLink
+                        href="/admin/primary-transfer"
+                        label="Primary role transfer"
+                        detail="Hand the primary seat to another administrator"
+                        icon="departments"
+                      />
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
