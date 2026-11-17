@@ -1,4 +1,5 @@
 export const SERMON_AUDIO_BUCKET_LIMIT_BYTES = 524_288_000;
+export const SERMON_AUDIO_EFFECTIVE_UPLOAD_BYTES = 50 * 1024 * 1024;
 
 export type ValidatedAudioUpload = {
   ok: true;
@@ -13,7 +14,7 @@ export type AudioUploadValidationFailure = {
 
 export type AudioUploadValidationResult = ValidatedAudioUpload | AudioUploadValidationFailure;
 
-const FORMAT_BY_EXTENSION: Record<string, { mimeType: string; signature: (bytes: Uint8Array) => boolean }> = {
+export const FORMAT_BY_EXTENSION: Record<string, { mimeType: string; signature: (bytes: Uint8Array) => boolean }> = {
   ".mp3": {
     mimeType: "audio/mpeg",
     signature: (bytes) =>
