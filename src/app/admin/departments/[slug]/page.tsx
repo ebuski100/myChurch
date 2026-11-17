@@ -7,6 +7,8 @@ import { getAdminAccess } from "@/lib/admin-auth";
 import { getAdminDepartments } from "@/lib/admin-department-data";
 import { AddMemberModal } from "../add-member-modal";
 import { AdminWorkspace } from "../../admin-shell";
+import { ContentArchiveActions } from "../../archive/archive-controls";
+import { ContentArchiveNotice } from "../../archive/archive-notice";
 
 export const metadata: Metadata = {
   title: "Department Members | Admin | VictoryCity Revival Ministry",
@@ -20,6 +22,7 @@ type PageSearchParams = {
   created?: string;
   updated?: string;
   error?: string;
+  contentArchive?: string;
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -247,6 +250,18 @@ function MemberCard({
           Edit member
         </Link>
       </div>
+      <div className="border-t border-[#EAECF0] px-4 py-3 sm:px-5">
+        <ContentArchiveActions
+          content={{
+            contentType: "department_member",
+            contentId: member.id,
+            title: member.fullName,
+            detail: member.status,
+          }}
+          archived={member.status === "archived"}
+          returnTo={`/admin/departments/${departmentSlug}`}
+        />
+      </div>
     </article>
   );
 }
@@ -369,6 +384,10 @@ export default async function AdminDepartmentDetailPage({
         </nav>
 
         <Notice params={query} />
+        <ContentArchiveNotice
+          result={query.contentArchive}
+          className="mb-6"
+        />
 
         <header className="mb-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
@@ -395,6 +414,16 @@ export default async function AdminDepartmentDetailPage({
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <ContentArchiveActions
+                content={{
+                  contentType: "department",
+                  contentId: department.id,
+                  title: department.name,
+                  detail: department.status,
+                }}
+                archived={department.status === "archived"}
+                returnTo={`/admin/departments/${department.slug}`}
+              />
               <Link
                 href={`/departments/${department.slug}`}
                 target="_blank"

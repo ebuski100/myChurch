@@ -175,7 +175,14 @@ select throws_ok($$insert into public.assets (media_type, storage_bucket, object
 
 -- UPDATE and DELETE filters must leave every published fixture unchanged.
 update public.resources set title = 'unauthorized update' where id = '21000000-0000-0000-0000-000000000001';
-delete from public.resources where id = '21000000-0000-0000-0000-000000000001';
+-- delete from public.resources where id = '21000000-0000-0000-0000-000000000001';
+
+select throws_ok(
+  $$delete from public.resources where id = '21000000-0000-0000-000000000001'$$,
+  '42501',
+  'permission denied for table resources',
+  'non-admin cannot directly delete resources'
+);
 select is((select title from public.resources where id = '21000000-0000-0000-0000-000000000001'), 'Audio public', 'non-admin update/delete cannot change or remove a published resource');
 update public.resource_assets set is_public_metadata = false where resource_id = '21000000-0000-0000-0000-000000000001' and asset_id = '31000000-0000-0000-0000-000000000001' and purpose = 'cover';
 delete from public.resource_assets where resource_id = '21000000-0000-0000-0000-000000000001' and asset_id = '31000000-0000-0000-0000-000000000001' and purpose = 'cover';
@@ -195,14 +202,58 @@ select is((select author from public.book_details where resource_id = '21000000-
 update public.document_details set document_kind = 'unauthorized' where resource_id = '21000000-0000-0000-0000-000000000008';
 delete from public.document_details where resource_id = '21000000-0000-0000-0000-000000000008';
 select is((select document_kind from public.document_details where resource_id = '21000000-0000-0000-0000-000000000008'), 'guide', 'non-admin update/delete cannot change or remove document details');
-update public.events set title = 'unauthorized' where id = '41000000-0000-0000-0000-000000000001';
-delete from public.events where id = '41000000-0000-0000-0000-000000000001';
-select is((select title from public.events where id = '41000000-0000-0000-0000-000000000001'), 'Event public', 'non-admin update/delete cannot change or remove a published event');
-update public.ministries set name = 'unauthorized' where id = '51000000-0000-0000-0000-000000000001';
-delete from public.ministries where id = '51000000-0000-0000-0000-000000000001';
-select is((select name from public.ministries where id = '51000000-0000-0000-0000-000000000001'), 'Ministry public', 'non-admin update/delete cannot change or remove a published ministry');
-update public.assets set alt_text = 'unauthorized' where id = '31000000-0000-0000-0000-000000000001';
-delete from public.assets where id = '31000000-0000-0000-0000-000000000001';
+
+
+
+update public.events
+set title = 'unauthorized'
+where id = '41000000-0000-0000-0000-000000000001';
+
+select throws_ok(
+  $$delete from public.events where id = '41000000-0000-0000-0000-000000000001'$$,
+  '42501',
+  'permission denied for table events',
+  'non-admin cannot directly delete events'
+);
+
+select is(
+  (
+    select title
+    from public.events
+    where id = '41000000-0000-0000-0000-000000000001'
+  ),
+  'Event public',
+  'non-admin update/delete cannot change or remove a published event'
+);
+
+
+-- update public.ministries set name = 'unauthorized' where id = '51000000-0000-0000-0000-000000000001';
+-- delete from public.ministries where id = '51000000-0000-0000-0000-000000000001';
+-- select is((select name from public.ministries where id = '51000000-0000-0000-0000-000000000001'), 'Ministry public', 'non-admin update/delete cannot change or remove a published ministry');
+
+
+update public.ministries
+set name = 'unauthorized'
+where id = '51000000-0000-0000-0000-000000000001';
+
+select throws_ok(
+  $$delete from public.ministries where id = '51000000-0000-0000-0000-000000000001'::uuid$$,
+  '42501',
+  'permission denied for table ministries',
+  'non-admin cannot directly delete ministries'
+);
+
+select is(
+  (
+    select name
+    from public.ministries
+    where id = '51000000-0000-0000-0000-000000000001'
+  ),
+  'Ministry public',
+  'non-admin update/delete cannot change or remove a published ministry'
+);
+update public.assets set alt_text = 'unauthorized' where id = '31000000-0000-0000-0000-0000000000
+= '31000000-0000-0000-0000-000000000001';
 select is((select alt_text from public.assets where id = '31000000-0000-0000-0000-000000000001'), 'Public resource cover', 'non-admin update/delete cannot change or remove public asset metadata');
 
 -- admin_users has no client write grants: attempt all operations as a non-admin.

@@ -7,7 +7,8 @@ export type AdminWorkspaceSection =
   | "overview"
   | "sermons"
   | "events"
-  | "departments";
+  | "departments"
+  | "archive";
 
 const sections: {
   id: AdminWorkspaceSection;
@@ -22,6 +23,7 @@ const sections: {
     label: "Departments",
     href: "/admin/departments",
   },
+  { id: "archive", label: "Archive", href: "/admin/archive" },
 ];
 
 function MinistryMark({ dark = false }: { dark?: boolean }) {
@@ -123,6 +125,18 @@ export function AdminSectionIcon({
           <circle cx="5" cy="17" r="2.5" />
           <circle cx="19" cy="17" r="2.5" />
           <path d="M10 9.5 6.5 14.5M14 9.5l3.5 5M7.5 17h9" />
+        </svg>
+      );
+    case "archive":
+      return (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className={className}
+          {...common}
+        >
+          <path d="M4 5.5h16v4H4zM6 9.5v10h12v-10M9 13h6" />
+          <path d="M9.5 16h5" />
         </svg>
       );
   }

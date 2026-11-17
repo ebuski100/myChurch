@@ -33,7 +33,7 @@ test("enforces explicit lifecycle transitions", () => {
   assert.equal(canTransitionSermon("published", "publish"), false);
 });
 
-test("sets publication fields consistently and returns restored sermons to drafts", () => {
+test("sets publication fields consistently and uses a draft fallback for restore requests", () => {
   const now = "2026-10-17T10:00:00.000Z";
   assert.deepEqual(sermonLifecycleFields("publish", now), { publication_status: "published", published_at: now });
   assert.deepEqual(sermonLifecycleFields("schedule", now, "2026-10-18T10:00:00.000Z"), {

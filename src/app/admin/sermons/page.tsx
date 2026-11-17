@@ -7,6 +7,7 @@ import { getAdminAccess } from "@/lib/admin-auth";
 import { getAdminSermons } from "@/lib/admin-sermon-data";
 import { AdminNotice } from "../admin-notice";
 import { AdminWorkspace } from "../admin-shell";
+import { ContentArchiveNotice } from "../archive/archive-notice";
 import { SermonList } from "./sermon-list";
 
 export const metadata: Metadata = {
@@ -73,6 +74,7 @@ export default async function AdminSermonsPage({
     scheduled?: string;
     updated?: string;
     durationWarning?: string;
+    contentArchive?: string;
   }>;
 }) {
   await connection();
@@ -187,6 +189,10 @@ export default async function AdminSermonsPage({
             className="mb-5"
           />
         )}
+        <ContentArchiveNotice
+          result={params.contentArchive}
+          className="mb-5"
+        />
         <Suspense fallback={<SermonListLoading />}>
           <SermonRecords />
         </Suspense>

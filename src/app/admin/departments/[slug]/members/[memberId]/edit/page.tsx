@@ -10,6 +10,8 @@ import { getAdminDepartments } from "@/lib/admin-department-data";
 import { AdminWorkspace } from "../../../../../admin-shell";
 import { updateDepartmentMemberAction } from "../../../../actions";
 import { MemberPhotoInput } from "../../../../member-photo-input";
+import { ContentArchiveActions } from "../../../../../archive/archive-controls";
+import { ContentArchiveNotice } from "../../../../../archive/archive-notice";
 
 export const metadata: Metadata = {
   title: "Edit Department Member | Admin",
@@ -25,6 +27,7 @@ type PageProps = {
   searchParams: Promise<{
     updated?: string;
     error?: string;
+    contentArchive?: string;
   }>;
 };
 
@@ -212,6 +215,20 @@ export default async function EditDepartmentMemberPage({
         <div className="mt-6">
           <Notice updated={query.updated} error={query.error} />
         </div>
+        <ContentArchiveNotice
+          result={query.contentArchive}
+          className="mt-4"
+        />
+        <ContentArchiveActions
+          content={{
+            contentType: "department_member",
+            contentId: member.id,
+            title: member.fullName,
+            detail: member.status,
+          }}
+          archived={member.status === "archived"}
+          returnTo={`/admin/departments/${department.slug}/members/${member.id}/edit`}
+        />
 
         <form
           action={updateDepartmentMemberAction}

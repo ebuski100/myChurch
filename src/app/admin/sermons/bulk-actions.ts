@@ -75,7 +75,7 @@ export async function bulkSermonLifecycleAction(
         .maybeSingle();
       items.push(updateError || !updated
         ? { resourceId, success: false, message: "Status changed elsewhere or update failed." }
-        : { resourceId, success: true, message: command === "archive" ? "Archived." : command === "restore" ? "Restored as draft." : "Scheduling cancelled; now a draft." });
+        : { resourceId, success: true, message: command === "archive" ? "Archived." : command === "restore" ? "Restored to its previous publication status." : "Scheduling cancelled; now a draft." });
     }
 
     if (items.some((item) => item.success)) {

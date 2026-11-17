@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { getAdminDepartments } from "@/lib/admin-department-data";
 import { AdminWorkspace } from "../admin-shell";
+import { ContentArchiveActions } from "../archive/archive-controls";
+import { ContentArchiveNotice } from "../archive/archive-notice";
 
 export const metadata: Metadata = {
   title: "Departments | Admin | VictoryCity Revival Ministry",
@@ -32,7 +34,12 @@ function StatusPill({ status }: { status: string }) {
 function QueryNotice({
   params,
 }: {
-  params: { created?: string; updated?: string; error?: string };
+  params: {
+    created?: string;
+    updated?: string;
+    error?: string;
+    contentArchive?: string;
+  };
 }) {
   let message = "";
   const error = Boolean(params.error);
@@ -94,6 +101,7 @@ export default async function AdminDepartmentsPage({
     created?: string;
     updated?: string;
     error?: string;
+    contentArchive?: string;
   }>;
 }) {
   await connection();
@@ -135,6 +143,10 @@ export default async function AdminDepartmentsPage({
         </header>
 
         <QueryNotice params={params} />
+        <ContentArchiveNotice
+          result={params.contentArchive}
+          className="mb-5"
+        />
 
         {result.kind === "error" ? (
           <section
@@ -247,6 +259,18 @@ export default async function AdminDepartmentsPage({
                       >
                         Edit
                       </Link>
+                    </div>
+                    <div className="mt-3">
+                      <ContentArchiveActions
+                        content={{
+                          contentType: "department",
+                          contentId: department.id,
+                          title: department.name,
+                          detail: department.status,
+                        }}
+                        archived={department.status === "archived"}
+                        returnTo="/admin/departments"
+                      />
                     </div>
                   </div>
                 </article>

@@ -85,7 +85,7 @@ export function AdminPageSkeleton() {
           <Skeleton className="h-10 w-20 rounded-full" />
         </div>
         <div className="mt-4 flex gap-2 overflow-hidden">
-          {[0, 1, 2, 3].map((item) => (
+          {[0, 1, 2, 3, 4].map((item) => (
             <Skeleton
               key={item}
               className="h-10 w-24 shrink-0 rounded-full"
@@ -105,7 +105,7 @@ export function AdminPageSkeleton() {
           </div>
         </div>
         <div className="mt-12 space-y-3">
-          {[0, 1, 2, 3].map((item) => (
+          {[0, 1, 2, 3, 4].map((item) => (
             <Skeleton
               key={item}
               className="h-11 w-full rounded-xl bg-white/10"

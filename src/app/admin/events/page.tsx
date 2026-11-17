@@ -6,6 +6,8 @@ import { AdminNotice } from "../admin-notice";
 import { AdminWorkspace } from "../admin-shell";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { getAdminEvents } from "@/lib/admin-event-data";
+import { ContentArchiveActions } from "../archive/archive-controls";
+import { ContentArchiveNotice } from "../archive/archive-notice";
 
 export const metadata: Metadata = {
   title: "Events | Admin | VictoryCity Revival Ministry",
@@ -34,7 +36,11 @@ function formatEventStart(value: string): string {
 export default async function AdminEventsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ updated?: string; created?: string }>;
+  searchParams: Promise<{
+    updated?: string;
+    created?: string;
+    contentArchive?: string;
+  }>;
 }) {
   await connection();
   const access = await getAdminAccess();
@@ -104,6 +110,10 @@ export default async function AdminEventsPage({
             className="mb-5"
           />
         ) : null}
+        <ContentArchiveNotice
+          result={params.contentArchive}
+          className="mb-5"
+        />
 
         {result.kind === "error" ? (
           <div
@@ -174,12 +184,24 @@ export default async function AdminEventsPage({
                     </p>
                   )}
                   <div className="mt-5 border-t border-[#EAECF0] pt-4">
-                    <Link
-                      href={`/admin/events/${encodeURIComponent(event.id)}/edit`}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
-                    >
-                      Edit event
-                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/admin/events/${encodeURIComponent(event.id)}/edit`}
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+                      >
+                        Edit event
+                      </Link>
+                      <ContentArchiveActions
+                        content={{
+                          contentType: "event",
+                          contentId: event.id,
+                          title: event.title,
+                          detail: event.status,
+                        }}
+                        archived={event.status === "archived"}
+                        returnTo="/admin/events"
+                      />
+                    </div>
                   </div>
                 </div>
               </article>

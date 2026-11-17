@@ -350,6 +350,8 @@ import { getAdminDepartments } from "@/lib/admin-department-data";
 
 import { AdminWorkspace } from "../../../admin-shell";
 import { updateDepartmentAction } from "../../actions";
+import { ContentArchiveActions } from "../../../archive/archive-controls";
+import { ContentArchiveNotice } from "../../../archive/archive-notice";
 
 export const metadata: Metadata = {
   title: "Edit Department | Admin",
@@ -362,6 +364,7 @@ type PageProps = {
   searchParams: Promise<{
     updated?: string;
     error?: string;
+    contentArchive?: string;
   }>;
 };
 
@@ -517,6 +520,20 @@ export default async function EditDepartmentPage({
         <div className="mt-6">
           <Notice updated={query.updated} error={query.error} />
         </div>
+        <ContentArchiveNotice
+          result={query.contentArchive}
+          className="mt-4"
+        />
+        <ContentArchiveActions
+          content={{
+            contentType: "department",
+            contentId: department.id,
+            title: department.name,
+            detail: department.status,
+          }}
+          archived={department.status === "archived"}
+          returnTo={`/admin/departments/${department.slug}/edit`}
+        />
 
         <form
           action={updateDepartmentAction}

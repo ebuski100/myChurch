@@ -11,6 +11,7 @@ import type {
 import type { SermonMediaType } from "@/lib/admin-sermon-validation";
 import { AdminNotice } from "../admin-notice";
 import { LoadingButton } from "@/components/ui/button";
+import { ContentArchiveActions } from "../archive/archive-controls";
 import {
   bulkSermonLifecycleAction,
   type BulkSermonActionState,
@@ -147,12 +148,24 @@ function SermonCard({
         </div>
       </dl>
       <div className="mt-5 border-t border-[#EAECF0] pt-4">
-        <Link
-          href={`/admin/sermons/${encodeURIComponent(sermon.id)}/edit`}
-          className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
-        >
-          Edit details
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/sermons/${encodeURIComponent(sermon.id)}/edit`}
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#D0D5DD] px-4 text-sm font-semibold text-[#101B33] hover:border-[#D9B66D] hover:bg-[#FBF8F0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+          >
+            Edit details
+          </Link>
+          <ContentArchiveActions
+            content={{
+              contentType: "resource",
+              contentId: sermon.id,
+              title: sermon.title,
+              detail: sermon.status,
+            }}
+            archived={sermon.status === "archived"}
+            returnTo="/admin/sermons"
+          />
+        </div>
       </div>
     </article>
   );

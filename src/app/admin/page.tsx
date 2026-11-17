@@ -250,9 +250,8 @@ export default async function AdminPage({
               Welcome to your content workspace.
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65 sm:text-base sm:leading-7">
-              See what is currently published across the ministry and
-              preview the public pages. Your editorial tools will grow
-              here in the next phase.
+              Review what is currently published, manage ministry
+              content, and keep the public pages up to date.
             </p>
             <Link
               href="/"
@@ -298,11 +297,11 @@ export default async function AdminPage({
                 id="quick-access-heading"
                 className="mt-2 text-xl font-semibold tracking-tight text-[#101B33]"
               >
-                Preview public pages
+                Workspace shortcuts
               </h2>
               <p className="mt-2 text-sm leading-6 text-[#667085]">
-                Check how published ministry content appears to
-                visitors.
+                Manage ministry content, review the archive, or preview
+                public pages.
               </p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
@@ -329,6 +328,12 @@ export default async function AdminPage({
                 label="Manage departments"
                 detail="Edit department profiles and member visibility"
                 icon="departments"
+              />
+              <PreviewLink
+                href="/admin/archive"
+                label="Content archive"
+                detail="Archive, restore, and review content history"
+                icon="archive"
               />
               <PreviewLink
                 href="/about"

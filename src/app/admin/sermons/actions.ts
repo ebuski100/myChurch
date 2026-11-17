@@ -15,6 +15,7 @@ import {
   parseYouTubeVideoUrl,
 } from "@/lib/sermon-video";
 import { createSupabaseAuthServerClient } from "@/lib/supabase/auth-server";
+import { createSupabaseStorageServerClient } from "@/lib/supabase/storage-server";
 
 export type SermonActionState = {
   message?: string;
@@ -261,13 +262,20 @@ export async function createSermonAction(
           });
 
     if (detailsError || typeDetails.error) {
-      const { error: cleanupError } = await supabase
-        .from("resources")
-        .delete()
-        .eq("id", resource.id)
-        .eq("resource_type", resourceType);
+      let cleanupFailed = false;
+      try {
+        const storageAdmin = createSupabaseStorageServerClient();
+        const { error: cleanupError } = await storageAdmin
+          .from("resources")
+          .delete()
+          .eq("id", resource.id)
+          .eq("resource_type", resourceType);
+        cleanupFailed = Boolean(cleanupError);
+      } catch {
+        cleanupFailed = true;
+      }
 
-      return cleanupError
+      return cleanupFailed
         ? {
             message:
               "The sermon details could not be saved. The draft record may need administrator review.",

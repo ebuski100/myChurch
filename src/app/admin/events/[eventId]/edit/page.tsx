@@ -10,6 +10,8 @@ import { formatLagosDateTimeInput } from "@/lib/event-validation";
 import { EventForm } from "../../event-form";
 import { EventPosterUpload } from "../../event-poster-upload";
 import { updateEventAction } from "../../actions";
+import { ContentArchiveActions } from "../../../archive/archive-controls";
+import { ContentArchiveNotice } from "../../../archive/archive-notice";
 
 export const metadata: Metadata = {
   title: "Edit Event | Admin | VictoryCity Revival Ministry",
@@ -23,7 +25,7 @@ export default async function EditAdminEventPage({
   searchParams,
 }: {
   params: Promise<{ eventId: string }>;
-  searchParams?: Promise<{ created?: string }>;
+  searchParams?: Promise<{ created?: string; contentArchive?: string }>;
 }) {
   await connection();
   const access = await getAdminAccess();
@@ -94,6 +96,20 @@ export default async function EditAdminEventPage({
                 className="mb-5"
               />
             )}
+            <ContentArchiveNotice
+              result={query?.contentArchive}
+              className="mb-5"
+            />
+            <ContentArchiveActions
+              content={{
+                contentType: "event",
+                contentId: result.event.id,
+                title: result.event.title,
+                detail: result.event.status,
+              }}
+              archived={result.event.status === "archived"}
+              returnTo={`/admin/events/${result.event.id}/edit`}
+            />
             <EventForm
               event={result.event}
               action={updateEventAction.bind(null, result.event.id)}

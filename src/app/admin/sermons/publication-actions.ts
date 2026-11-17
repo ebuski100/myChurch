@@ -152,7 +152,7 @@ export async function changeSermonLifecycleAction(
       archive: mediaType === "video"
         ? "Sermon archived. Its metadata and YouTube link were retained."
         : "Sermon archived. Its metadata and private audio were retained.",
-      restore: "Sermon restored as a draft. Review it before publishing or scheduling.",
+      restore: "Sermon restored to its previous publication status.",
     };
     return { success: true, message: messages[command] };
   } catch {

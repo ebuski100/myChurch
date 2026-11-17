@@ -76,7 +76,9 @@ export function sermonLifecycleFields(
       return scheduledAt ? { publication_status: "scheduled", published_at: scheduledAt } : null;
     case "unpublish":
     case "cancel_schedule":
+      return { publication_status: "draft", published_at: null };
     case "restore":
+      // The database archive trigger replaces this safe fallback with the saved state.
       return { publication_status: "draft", published_at: null };
     case "archive":
       return { publication_status: "archived", published_at: null };
