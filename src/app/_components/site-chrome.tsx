@@ -88,7 +88,8 @@ export function SiteHeader({
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   async function handleShare() {
-    const url = window.location.href;
+    const url = "https://www.victorycityrevivalministry.org";
+    // const url = window.location.href;
     const title = "VictoryCity Revival Ministry";
     const text =
       "Discover VictoryCity Revival Ministry — Massive Grace Explosion. Visit our website and stay connected!";
