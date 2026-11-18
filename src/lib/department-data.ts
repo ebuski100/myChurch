@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getDepartmentMemberPhotoUrls } from "@/lib/department-member-photo-storage";
@@ -68,7 +68,8 @@ function mapDepartment(row: DepartmentRow, photoUrls: Map<string, string>): Publ
     meetingInformation: row.meeting_information,
     contactLabel: row.contact_label,
     contactUrl: row.contact_url,
-    members: normalizeMembers(row.department_members).map((member) => ({
+    members: normalizeMembers(row.department_members)
+      .map((member) => ({
       id: member.id,
       fullName: member.full_name,
       roleTitle: member.role_title,
@@ -81,7 +82,7 @@ function mapDepartment(row: DepartmentRow, photoUrls: Map<string, string>): Publ
 const departmentSelection = `
   id, slug, name, short_description, description, mission,
   meeting_information, contact_label, contact_url,
-  department_members(id, full_name, role_title, biography, photo_asset_id)
+  department_members(id, full_name, role_title, biography, photo_asset_id, publication_status, is_public, scheduled_at)
 `;
 
 export async function getPublishedDepartments(): Promise<PublicDepartmentsResult> {

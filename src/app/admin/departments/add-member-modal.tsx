@@ -22,6 +22,8 @@ export function AddMemberModal({
   departmentName: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+const [publicationIntent, setPublicationIntent] =
+ useState("draft");
 
   return (
     <>
@@ -147,9 +149,43 @@ export function AddMemberModal({
 
           <MemberPhotoInput id="new-member-photo" />
 
+          <div>
+            <label className={labelClass} htmlFor="new-member-publication">
+              Publication
+            </label>
+            <select
+              className={inputClass}
+              id="new-member-publication"
+              name="publicationIntent"
+              value={publicationIntent}
+              onChange={(event) =>
+                setPublicationIntent(event.currentTarget.value)
+              }
+            >
+              <option value="draft">Save as draft</option>
+              <option value="publish">Publish immediately</option>
+              <option value="schedule">Schedule publishing</option>
+            </select>
+          </div>
+
+          {publicationIntent === "schedule" && (
+            <div>
+              <label className={labelClass} htmlFor="new-member-scheduled-at">
+                Schedule publication (Africa/Lagos, WAT)
+              </label>
+              <input
+                className={inputClass}
+                id="new-member-scheduled-at"
+                name="scheduledAt"
+                type="datetime-local"
+                required
+              />
+            </div>
+          )}
+
           <p className="rounded-xl bg-[#F8F4E9] px-4 py-3 text-xs leading-5 text-[#71551D]">
-            New members are created as private drafts. You can review the
-            profile and publish it later from the member editor.
+            New members are created as private drafts by default. Choose
+            publishing or scheduling to make the profile public.
           </p>
 
           <div className="flex flex-col-reverse gap-3 border-t border-[#EAECF0] pt-5 sm:flex-row sm:justify-end">

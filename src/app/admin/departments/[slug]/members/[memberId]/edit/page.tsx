@@ -56,6 +56,8 @@ function Notice({
 
   const messages: Record<string, string> = {
     invalid_member: "Please check the member details and try again.",
+ invalid_schedule:
+ "Please choose a valid future date and time in Africa/Lagos.",
     member_photo_invalid:
       "That photo format isn't supported. Choose a JPG, PNG, or WebP image.",
     member_photo_too_large:
@@ -379,6 +381,35 @@ export default async function EditDepartmentMemberPage({
                   Draft and archived profiles should not appear in the
                   public member listing.
                 </p>
+
+                <div className="mt-4">
+                  <label className={labelClass} htmlFor="publicationIntent">
+                    Publication action
+                  </label>
+                  <select
+                    className={inputClass}
+                    id="publicationIntent"
+                    name="publicationIntent"
+                    defaultValue=""
+                  >
+                    <option value="">Keep current settings</option>
+                    <option value="draft">Save as draft</option>
+                    <option value="publish">Publish immediately</option>
+                    <option value="schedule">Schedule publishing</option>
+                  </select>
+                </div>
+
+                <div className="mt-4">
+                  <label className={labelClass} htmlFor="scheduledAt">
+                    Schedule publication (Africa/Lagos, WAT)
+                  </label>
+                  <input
+                    className={inputClass}
+                    id="scheduledAt"
+                    name="scheduledAt"
+                    type="datetime-local"
+                  />
+                </div>
               </div>
 
               <div>
