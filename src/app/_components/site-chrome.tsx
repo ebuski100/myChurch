@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import Image from "next/image";
 
 const navigation = [
@@ -9,7 +10,7 @@ const navigation = [
   { label: "About", href: "/about" },
   { label: "Sermons", href: "/sermons" },
   { label: "Events", href: "/events" },
-  { label: "Services", href: "/#services" },
+  // { label: "Services", href: "/#services" },
   { label: "Departments", href: "/departments" },
 ];
 
@@ -84,6 +85,28 @@ export function SiteHeader({
   activeHref,
 }: { activeHref?: string } = {}) {
   const pathname = usePathname();
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
+
+  async function handleShare() {
+    const url = window.location.href;
+    const title = document.title;
+    const text =
+      document
+        .querySelector('meta[name="description"]')
+        ?.getAttribute("content") ?? "";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+        setShareStatus("Shared");
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareStatus("Link copied");
+      }
+    } catch {
+      setShareStatus("Share cancelled");
+    }
+    setTimeout(() => setShareStatus(null), 2000);
+  }
 
   return (
     <header className="fixed left-0 inset-x-0 top-0 z-10 border-b border-white/10 bg-[#0B1220]">
@@ -114,6 +137,15 @@ export function SiteHeader({
             );
           })}
         </nav>
+
+        <button
+          type="button"
+          onClick={handleShare}
+          className={`inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-white/10 ${focusClass} sm:px-5 sm:text-sm`}
+          aria-label="Share this page"
+        >
+          {shareStatus ?? "Share"}
+        </button>
 
         <Link
           href="/#visit"
@@ -259,7 +291,7 @@ export function SiteFooter() {
                 className="size-4"
                 aria-hidden="true"
               >
-                <circle cx="12" cy="12" r="9.5"/>
+                <circle cx="12" cy="12" r="9.5" />
                 <path d="M8 13.5c1.4-1.1 3.5-1.1 4.9 0l3.9 3.2c1.5-.8 3-1.9 4.9-1.5s3 .7 4.9 1.5l3.9-3.2c1.5 .8 3 1.9 4.9 1.5s3-.7 4.9-1.5l-4-3.6c1.1-1.4 0-3-1.9-3h-3.4c-.5 0-1 .9-1 2.1l-4 3.6c-1.1 1.4-1.9 3-1.9 3h-3.4c-.9 0-1.5-1.6-1.9-3l-4-3.6ZM12 3L2 12h3v9H2V12zm12 0L22 12h-3v9h-2V12Z" />
               </svg>
               Telegram
