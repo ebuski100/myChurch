@@ -89,17 +89,15 @@ export function SiteHeader({
 
   async function handleShare() {
     const url = window.location.href;
-    const title = document.title;
+    const title = "VictoryCity Revival Ministry";
     const text =
-      document
-        .querySelector('meta[name="description"]')
-        ?.getAttribute("content") ?? "";
+      "Discover VictoryCity Revival Ministry — Massive Grace Explosion. Visit our website and stay connected!";
     try {
       if (navigator.share) {
         await navigator.share({ title, text, url });
         setShareStatus("Shared");
       } else {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(`${text}\n${url}`);
         setShareStatus("Link copied");
       }
     } catch {
@@ -253,7 +251,7 @@ export function SiteFooter() {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
           <p>VictoryCity Revival Ministry. All rights reserved.</p>
 
-          <div className="flex flex-wrap items-center gap-5">
+          <div className="flex flex-wrap justify-between gap-5">
             <Link
               href="/admin/login"
               className={`inline-flex min-h-11 items-center text-white/40 transition-colors hover:text-[#E6C77D] ${focusClass}`}
