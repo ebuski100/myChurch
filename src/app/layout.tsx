@@ -4,6 +4,8 @@ import { AudioPlayerProvider } from "@/app/sermons/audio-player-provider";
 
 import { ListenLaterProvider } from "@/app/sermons/listen-later-provider";
 
+import { PwaRegister } from "@/components/pwa-register";
+
 export const metadata: Metadata = {
   title: "VictoryCity Revival Ministry | Massive Grace Explosion",
   description:
@@ -25,6 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col">
+        <PwaRegister />
         <ListenLaterProvider>
           <AudioPlayerProvider>{children}</AudioPlayerProvider>
         </ListenLaterProvider>
