@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { signOutAction } from "./actions";
 import Image from "next/image";
 import { LoadingButton } from "@/components/ui/button";
+import { SignOutButton } from "./sign-out-button";
 export type AdminWorkspaceSection =
   | "overview"
   | "sermons"
@@ -140,38 +140,6 @@ export function AdminSectionIcon({
         </svg>
       );
   }
-}
-
-function SignOutButton({ compact = false }: { compact?: boolean }) {
-  const colors = compact
-    ? "border-[#D0D5DD] text-[#475467] hover:border-[#D9B66D] hover:bg-[#FBF8F0] hover:text-[#101B33] focus-visible:outline-[#9A772E]"
-    : "border-white/15 text-white/80 hover:border-[#D9B66D]/70 hover:bg-white/5 hover:text-white focus-visible:outline-[#E6C77D]";
-
-  return (
-    <form action={signOutAction}>
-      <LoadingButton
-        type="submit"
-        pendingLabel="Signing out…"
-        className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 ${colors} ${compact ? "px-3" : "w-full"}`}
-      >
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 20 20"
-          fill="none"
-          className="size-4"
-        >
-          <path
-            d="M8 4H4.5v12H8M11 6l4 4-4 4m4-4H7"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        Sign out
-      </LoadingButton>
-    </form>
-  );
 }
 
 function AdminNavigation({
