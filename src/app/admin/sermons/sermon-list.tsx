@@ -60,7 +60,7 @@ function SermonCard({
   const duration = formatDuration(sermon.durationSeconds);
 
   return (
-    <article className="rounded-2xl border border-[#E4E7EC] bg-white p-5 shadow-[0_5px_22px_rgba(16,27,51,0.035)] sm:p-6">
+    <article className="rounded-2xl border border-[#E4E7EC] bg-white p-3 shadow-[0_5px_22px_rgba(16,27,51,0.035)] sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="inline-flex items-center gap-2 text-xs font-medium text-[#475467]">
           <input
@@ -75,8 +75,12 @@ function SermonCard({
           Select
         </label>
         <span className="inline-flex items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-[#101B33] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
-            {sermon.mediaType === "video" ? "Video" : "Audio"}
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${sermon.mediaType === "video" ? "bg-[#DCE9FF] text-[#1D4ED8]" : "bg-[#DCFCE7] text-[#166534]"}`}
+          >
+            {sermon.mediaType === "video"
+              ? "VIDEO SERMON"
+              : "AUDIO SERMON"}
           </span>
           <span
             className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold capitalize tracking-wide ${statusStyles[sermon.status]}`}
@@ -101,14 +105,14 @@ function SermonCard({
         </span>
       </div>
 
-      <h2 className="mt-4 text-lg font-semibold leading-snug tracking-tight text-[#101B33] sm:text-xl">
+      <h2 className="mt-2 text-lg font-semibold leading-snug tracking-tight text-[#101B33] sm:text-xl">
         {sermon.title}
       </h2>
-      <p className="mt-1 text-sm text-[#667085]">
+      <p className=" text-sm text-[#667085]">
         {sermon.preacher || "Speaker not provided"}
       </p>
 
-      <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-[#EAECF0] pt-4 text-sm">
+      <dl className="mt-3 grid grid-cols-3 gap-x-4 gap-y-4 border-t border-[#EAECF0] pt-4 text-sm">
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#98A2B3]">
             Sermon date
@@ -127,6 +131,16 @@ function SermonCard({
               : (duration ?? "Not provided")}
           </dd>
         </div>
+
+        <div>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#98A2B3]">
+            Series
+          </dt>
+          <dd className="mt-1 font-medium text-[#475467]">
+            {sermon.series || "No series assigned"}
+          </dd>
+        </div>
+
         {sermon.status === "scheduled" && (
           <div className="col-span-2">
             <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#98A2B3]">
@@ -138,16 +152,8 @@ function SermonCard({
             </dd>
           </div>
         )}
-        <div className="col-span-2">
-          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#98A2B3]">
-            Series
-          </dt>
-          <dd className="mt-1 font-medium text-[#475467]">
-            {sermon.series || "No series assigned"}
-          </dd>
-        </div>
       </dl>
-      <div className="mt-5 border-t border-[#EAECF0] pt-4">
+      <div className="mt-4 border-t border-[#EAECF0] pt-3">
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/admin/sermons/${encodeURIComponent(sermon.id)}/edit`}
@@ -229,7 +235,11 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
     });
   }
 
-  function resetFilter(nextQuery: string, nextStatus: StatusFilter, nextMedia: MediaFilter) {
+  function resetFilter(
+    nextQuery: string,
+    nextStatus: StatusFilter,
+    nextMedia: MediaFilter,
+  ) {
     setQuery(nextQuery);
     setStatus(nextStatus);
     setMediaType(nextMedia);
@@ -300,7 +310,11 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
               id="admin-sermon-media"
               value={mediaType}
               onChange={(event) =>
-                resetFilter(query, status, event.target.value as MediaFilter)
+                resetFilter(
+                  query,
+                  status,
+                  event.target.value as MediaFilter,
+                )
               }
               className="min-h-11 w-full rounded-xl border border-[#D0D5DD] bg-white px-3 text-sm text-[#101B33] outline-none focus:border-[#9A772E] focus:ring-2 focus:ring-[#D9B66D]/30"
             >
@@ -320,7 +334,11 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
               id="admin-sermon-status"
               value={status}
               onChange={(event) =>
-                resetFilter(query, event.target.value as StatusFilter, mediaType)
+                resetFilter(
+                  query,
+                  event.target.value as StatusFilter,
+                  mediaType,
+                )
               }
               className="min-h-11 w-full rounded-xl border border-[#D0D5DD] bg-white px-3 text-sm text-[#101B33] outline-none focus:border-[#9A772E] focus:ring-2 focus:ring-[#D9B66D]/30"
             >
@@ -415,7 +433,9 @@ export function SermonList({ sermons }: { sermons: AdminSermon[] }) {
                 name="command"
                 value="cancel_schedule"
                 onClick={() => setBulkCommand("cancel_schedule")}
-                pending={bulkPending && bulkCommand === "cancel_schedule"}
+                pending={
+                  bulkPending && bulkCommand === "cancel_schedule"
+                }
                 pendingLabel="Cancelling schedules…"
                 disabled={
                   bulkPending ||
