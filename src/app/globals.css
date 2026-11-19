@@ -84,3 +84,22 @@ button:not(:disabled):active {
     transition-duration: 0.01ms !important;
   }
 }
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]):not([disabled]) {
+  transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, filter 150ms ease, opacity 150ms ease;
+}
+
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):not([disabled]):active {
+  transform: scale(0.98);
+  filter: brightness(0.96);
+}
+
+a[href] {
+  transition: color 150ms ease, opacity 150ms ease, background-color 150ms ease, text-decoration-color 150ms ease;
+}
+
+a[href]:active {
+  opacity: 0.85;
+}
