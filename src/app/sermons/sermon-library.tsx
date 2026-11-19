@@ -6,6 +6,7 @@ import type { SermonWithMedia } from "@/lib/sermon-media-display";
 import { formatDuration } from "@/lib/sermons";
 import { SermonPlayButton } from "./sermon-play-button";
 import { ListenLaterButton } from "./listen-later-button";
+import { SermonOfflineDownloadButton } from "@/components/sermon-offline-download-button";
 import { ListenLaterLink } from "./listen-later-link";
 
 function getCategories(sermons: SermonWithMedia[]) {
@@ -238,6 +239,13 @@ function AudioSermonRow({ sermon }: { sermon: SermonWithMedia }) {
           sermonId={sermon.id}
           sermonTitle={sermon.title}
         />
+
+        {sermon.mediaType === "audio" && (
+          <SermonOfflineDownloadButton
+            sermonId={sermon.id}
+            sermonTitle={sermon.title}
+          />
+        )}
 
         {sermon.downloadAllowed && (
           <a

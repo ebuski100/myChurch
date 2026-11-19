@@ -353,7 +353,7 @@ export function SiteFooter() {
             </button>
             <Link
               href="/admin/login"
-              className={`inline-flex min-h-11 items-center text-white transition-colors hover:text-[#E6C77D] ${focusClass} border border-white/50 rounded-full px-4`}
+              className={`inline-flex min-h-11 items-center text-white transition-colors hover:text-[#E6C77D] ${focusClass} border border-white/20 rounded-full px-4`}
             >
               Admin
             </Link>
