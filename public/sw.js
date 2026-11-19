@@ -1,6 +1,11 @@
 /* VictoryCity Revival Ministry — Stage 1A service worker */
 const CACHE_VERSION = "vc-sw-v1";
+const PAGE_CACHE = "vc-pages-v1";
+const MAX_CACHED_PAGES = 20;
 const PRECACHE = ["/offline.html", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/icon-maskable-512.png"];
+
+// Explicit allowlist of public pages safe for offline caching.
+const PUBLIC_PAGES = new Set(["/", "/about", "/departments", "/events", "/sermons"]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -14,7 +19,10 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((k) => k.startsWith("vc-sw-") && k !== CACHE_VERSION)
+          .filter((k) =>
+            (k.startsWith("vc-sw-") && k !== CACHE_VERSION) ||
+            (k.startsWith("vc-pages-") && k !== PAGE_CACHE),
+          )
           .map((k) => caches.delete(k)),
       ),
     ),
@@ -65,16 +73,32 @@ self.addEventListener("fetch", (event) => {
   // Navigation requests: network-first, cache fallback to offline.html
   const isNav = request.mode === "navigate";
   if (isNav) {
+    const eligible = PUBLIC_PAGES.has(url.pathname);
     event.respondWith(
       fetch(request)
         .then((res) => {
-          if (isSafeResponse(res) && (res.headers.get("content-type") || "").includes("text/html")) {
+          if (
+            eligible &&
+            isSafeResponse(res) &&
+            (res.headers.get("content-type") || "").includes("text/html")
+          ) {
             const copy = res.clone();
-            caches.open(CACHE_VERSION).then((c) => c.put(request, copy)).catch(() => {});
+            caches.open(PAGE_CACHE).then(async (c) => {
+              await c.put(request, copy);
+              const keys = await c.keys();
+              if (keys.length > MAX_CACHED_PAGES) {
+                await c.delete(keys[0]);
+              }
+            }).catch(() => {});
           }
           return res;
         })
-        .catch(() => caches.match("/offline.html").then((r) => r || new Response("Offline", { status: 503 }))),
+        .catch(() =>
+          (eligible
+            ? caches.match(request).then((r) => r || caches.match("/offline.html"))
+            : caches.match("/offline.html")
+          ).then((r) => r || new Response("Offline", { status: 503 })),
+        ),
     );
     return;
   }
