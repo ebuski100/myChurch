@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   downloadSermonAudio,
   getDownloadStatus,
@@ -23,6 +23,8 @@ export function SermonOfflineDownloadButton({
     total: number | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+const [toast, setToast] = useState<string | null>(null);
+const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -62,11 +64,20 @@ export function SermonOfflineDownloadButton({
   };
 
   const handleRemove = async () => {
-    await removeDownload(sermonId);
-    setStatus("not-downloaded");
-    setProgress(null);
-    setError(null);
-  };
+    try {
+ await removeDownload(sermonId);
+ setStatus("not-downloaded");
+ setProgress(null);
+ setError(null);
+ setToast("Offline copy removed.");
+ if (timerRef.current) clearTimeout(timerRef.current);
+ timerRef.current = setTimeout(() => setToast(null), 3000);
+ } catch {
+ setToast("Could not remove offline copy. Please try again.");
+ if (timerRef.current) clearTimeout(timerRef.current);
+ timerRef.current = setTimeout(() => setToast(null), 3000);
+ }
+};
 
   const buttonClass =
     "flex min-w-0 items-center justify-center gap-2 rounded-xl border border-[#E4E7EC] px-2 py-3 text-[#344054] transition hover:border-[#D9B66D] hover:bg-[#F8F4E9] hover:text-[#785B1F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] sm:px-3";
@@ -166,7 +177,11 @@ export function SermonOfflineDownloadButton({
   }
 
   return (
-    <button
+ <>
+ {toast && (
+ <div role="status" aria-live="polite" className={`fixed bottom-4 right-4 z-50 rounded-full px-4 py-2 text-sm font-medium shadow-lg ${toast.startsWith("Could not") ? "bg-[#FEF3F2] text-[#B42318]" : "bg-[#ECFDF3] text-[#027A48]"}`}>{toast}</div>
+ )}
+ <button
       type="button"
       onClick={handleDownload}
       className={buttonClass}
@@ -203,5 +218,6 @@ export function SermonOfflineDownloadButton({
         </span>
       </span>
     </button>
-  );
+</>
+);
 }
