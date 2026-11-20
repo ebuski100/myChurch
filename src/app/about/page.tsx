@@ -61,7 +61,7 @@ function HeroSection() {
           </p>
           <h1
             id="about-hero-heading"
-            className="mt-4 font-display text-5xl font-normal leading-[1.05] tracking-tight text-white sm:text-6xl"
+            className="mt-4 font-display text-4xl font-normal leading-[1.05] tracking-tight text-white sm:text-6xl"
           >
             A Church with a<br />
             <span className="text-[#D9B66D]">Greater Purpose.</span>
