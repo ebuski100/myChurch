@@ -358,6 +358,10 @@ export function SiteFooter() {
               Admin
             </Link>
 
+            <span className="text-white text-xs  flex items-center italic">
+              follow us on:{" "}
+            </span>
+
             <a
               href="https://web.facebook.com/profile.php?id=100067393373513"
               target="_blank"
