@@ -226,11 +226,14 @@ function SermonCard({ sermon }: { sermon: SermonWithMedia }) {
             className="object-cover object-center transition duration-300 group-hover:scale-105"
           />
         ) : (
-          <HomeArtwork
-            slot="sermon"
-            className="absolute inset-0 h-full w-full"
-          />
-        )}
+ <Image
+ src="/images/sermons.png"
+ alt="VictoryCity Revival Ministry"
+ fill
+ sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+ className="object-contain p-8 transition duration-300 group-hover:scale-105"
+ />
+ )}
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-gradient-to-t from-[#101B33]/50 via-transparent to-transparent"

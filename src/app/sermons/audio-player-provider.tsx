@@ -128,7 +128,9 @@ export function AudioPlayerProvider({
   const [errorMessage, setErrorMessage] = useState<string | null>(
     null,
   );
-  const [playbackInfo, setPlaybackInfo] = useState<string | null>(null);
+  const [playbackInfo, setPlaybackInfo] = useState<string | null>(
+    null,
+  );
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
@@ -171,7 +173,9 @@ export function AudioPlayerProvider({
       const audio = audioRef.current;
 
       if (!audio) {
-        setErrorMessage("The audio player is not ready. Please try again.");
+        setErrorMessage(
+          "The audio player is not ready. Please try again.",
+        );
         setStatus("error");
         return;
       }
@@ -194,7 +198,8 @@ export function AudioPlayerProvider({
         revokeBlobUrl();
 
         const offline =
-          typeof navigator !== "undefined" && navigator.onLine === false;
+          typeof navigator !== "undefined" &&
+          navigator.onLine === false;
 
         if (offline) {
           const ok = await setSourceToOffline(sermon, requestId);
@@ -241,7 +246,8 @@ export function AudioPlayerProvider({
         setStatus("error");
         setPlaybackInfo(null);
         setErrorMessage(
-          typeof navigator !== "undefined" && navigator.onLine === false
+          typeof navigator !== "undefined" &&
+            navigator.onLine === false
             ? "This sermon is not available offline."
             : "This recording could not start. Check your connection and try again.",
         );
@@ -312,7 +318,10 @@ export function AudioPlayerProvider({
       return;
     }
 
-    audio.currentTime = Math.max(0, Math.min(nextTime, audio.duration));
+    audio.currentTime = Math.max(
+      0,
+      Math.min(nextTime, audio.duration),
+    );
     setCurrentTime(audio.currentTime);
   }, []);
 
@@ -358,7 +367,7 @@ export function AudioPlayerProvider({
       <div
         className={
           currentSermon
-            ? "flex min-h-full flex-col pb-44 sm:pb-36"
+            ? "flex min-h-full flex-col pb-40 sm:pb-35"
             : "flex min-h-full flex-col"
         }
       >
@@ -514,11 +523,14 @@ export function AudioPlayerProvider({
                   >
                     {errorMessage ??
                       (isLoading
-                        ? playbackInfo ?? "Getting the message ready…"
+                        ? (playbackInfo ??
+                          "Getting the message ready…")
                         : isPlaying
-                          ? playbackInfo ?? "Take a moment and listen."
+                          ? (playbackInfo ??
+                            "Take a moment and listen.")
                           : status === "paused"
-                            ? playbackInfo ?? "Paused · Resume whenever you're ready."
+                            ? (playbackInfo ??
+                              "Paused · Resume whenever you're ready.")
                             : status === "error"
                               ? "Playback could not start."
                               : "Choose a message and listen anywhere.")}
@@ -604,10 +616,15 @@ export function AudioPlayerProvider({
             if (!sermon || !audio) return;
 
             // If the offline blob itself failed, don't loop.
-            if (blobUrlRef.current && audio.src === blobUrlRef.current) {
+            if (
+              blobUrlRef.current &&
+              audio.src === blobUrlRef.current
+            ) {
               setPlaybackInfo(null);
               setStatus("error");
-              setErrorMessage("Saved offline audio could not be played.");
+              setErrorMessage(
+                "Saved offline audio could not be played.",
+              );
               return;
             }
 
@@ -619,7 +636,8 @@ export function AudioPlayerProvider({
                 setPlaybackInfo(null);
                 setStatus("error");
                 setErrorMessage(
-                  typeof navigator !== "undefined" && navigator.onLine === false
+                  typeof navigator !== "undefined" &&
+                    navigator.onLine === false
                     ? "This sermon is not available offline."
                     : "This recording is unavailable right now. Please try again later.",
                 );
@@ -634,7 +652,9 @@ export function AudioPlayerProvider({
                 if (requestId !== requestIdRef.current) return;
                 setPlaybackInfo(null);
                 setStatus("error");
-                setErrorMessage("Saved offline audio could not be played.");
+                setErrorMessage(
+                  "Saved offline audio could not be played.",
+                );
               }
             })();
           }}
