@@ -178,98 +178,220 @@ function VideoSermonCard({ sermon }: { sermon: SermonWithMedia }) {
   );
 }
 
+// function AudioSermonRow({ sermon }: { sermon: SermonWithMedia }) {
+//   const duration = formatDuration(sermon.durationSeconds);
+
+//   return (
+//     <article className="border-b border-[#E4E7EC] last:border-b-0">
+//       <div className="flex min-w-0 justify-center gap-3 flex-col py-4 sm:gap-5">
+//         <div className="flex items-center w-full">
+//           <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#F8F4E9] text-[#785B1F] sm:size-12">
+//             <svg
+//               aria-hidden="true"
+//               viewBox="0 0 24 24"
+//               fill="none"
+//               className="size-5 sm:size-6"
+//             >
+//               <path
+//                 d="M9 18V5l12-2v13M9 18c0 1.1-1.34 2-3 2s-3-.9-3-2 1.34-2 3-2 3 .9 3 2Zm12-2c0 1.1-1.34 2-3 2s-3-.9-3-2 1.34-2 3-2 3 .9 3 2ZM9 9l12-2"
+//                 stroke="currentColor"
+//                 strokeWidth="1.5"
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//               />
+//             </svg>
+//           </div>
+
+//           <div className="min-w-0 flex-1">
+//             <h3 className="break-words text-sm font-semibold leading-6 text-[#101B33] sm:text-base">
+//               {sermon.title}
+//             </h3>
+
+//             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#667085] sm:text-sm">
+//               <span>
+//                 {sermon.preacher || "Preacher not provided"}
+//               </span>
+//               {sermon.category && (
+//                 <>
+//                   <span aria-hidden="true">·</span>
+//                   <span>{sermon.category}</span>
+//                 </>
+//               )}
+//               {sermon.date && (
+//                 <>
+//                   <span aria-hidden="true">·</span>
+//                   <span>{sermon.date}</span>
+//                 </>
+//               )}
+//             </div>
+
+//             {duration && (
+//               <p className="mt-1 text-xs tabular-nums text-[#667085] sm:hidden">
+//                 {duration}
+//               </p>
+//             )}
+//           </div>
+
+//           <span className="hidden shrink-0 text-sm tabular-nums text-[#667085] sm:inline">
+//             {duration || "—"}
+//           </span>
+
+//           <SermonPlayButton sermon={sermon} />
+
+//           <ListenLaterButton
+//             sermonId={sermon.id}
+//             sermonTitle={sermon.title}
+//           />
+//         </div>
+
+//         <div className="flex justify-between">
+//           {sermon.mediaType === "audio" && (
+//             <SermonOfflineDownloadButton
+//               sermonId={sermon.id}
+//               sermonTitle={sermon.title}
+//             />
+//           )}
+
+//           {sermon.downloadAllowed && (
+//             <a
+//               href={`/api/sermons/${encodeURIComponent(sermon.id)}/audio?download=1`}
+//               aria-label={`Download ${sermon.title}`}
+//               title="Download audio"
+//               className="grid size-11 shrink-0 place-items-center rounded-full text-[#667085] transition hover:bg-[#F8F4E9] hover:text-[#785B1F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
+//             >
+//               <svg
+//                 aria-hidden="true"
+//                 viewBox="0 0 20 20"
+//                 fill="none"
+//                 className="size-5"
+//               >
+//                 <path
+//                   d="M10 2.75v9.5m0 0 3.5-3.5M10 12.25l-3.5-3.5M3.5 13.5v2A1.75 1.75 0 0 0 5.25 17.25h9.5A1.75 1.75 0 0 0 16.5 15.5v-2"
+//                   stroke="currentColor"
+//                   strokeWidth="1.5"
+//                   strokeLinecap="round"
+//                   strokeLinejoin="round"
+//                 />
+//               </svg>
+//             </a>
+//           )}
+//         </div>
+//       </div>
+//     </article>
+//   );
+// }
+
 function AudioSermonRow({ sermon }: { sermon: SermonWithMedia }) {
   const duration = formatDuration(sermon.durationSeconds);
 
   return (
     <article className="border-b border-[#E4E7EC] last:border-b-0">
-      <div className="flex min-w-0 items-center gap-3 py-4 sm:gap-5">
-        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#F8F4E9] text-[#785B1F] sm:size-12">
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            className="size-5 sm:size-6"
-          >
-            <path
-              d="M9 18V5l12-2v13M9 18c0 1.1-1.34 2-3 2s-3-.9-3-2 1.34-2 3-2 3 .9 3 2Zm12-2c0 1.1-1.34 2-3 2s-3-.9-3-2 1.34-2 3-2 3 .9 3 2ZM9 9l12-2"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <h3 className="break-words text-sm font-semibold leading-6 text-[#101B33] sm:text-base">
-            {sermon.title}
-          </h3>
-
-          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#667085] sm:text-sm">
-            <span>{sermon.preacher || "Preacher not provided"}</span>
-            {sermon.category && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span>{sermon.category}</span>
-              </>
-            )}
-            {sermon.date && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span>{sermon.date}</span>
-              </>
-            )}
-          </div>
-
-          {duration && (
-            <p className="mt-1 text-xs tabular-nums text-[#667085] sm:hidden">
-              {duration}
-            </p>
-          )}
-        </div>
-
-        <span className="hidden shrink-0 text-sm tabular-nums text-[#667085] sm:inline">
-          {duration || "—"}
-        </span>
-
-        <SermonPlayButton sermon={sermon} />
-
-        <ListenLaterButton
-          sermonId={sermon.id}
-          sermonTitle={sermon.title}
-        />
-
-        {sermon.mediaType === "audio" && (
-          <SermonOfflineDownloadButton
-            sermonId={sermon.id}
-            sermonTitle={sermon.title}
-          />
-        )}
-
-        {sermon.downloadAllowed && (
-          <a
-            href={`/api/sermons/${encodeURIComponent(sermon.id)}/audio?download=1`}
-            aria-label={`Download ${sermon.title}`}
-            title="Download audio"
-            className="grid size-11 shrink-0 place-items-center rounded-full text-[#667085] transition hover:bg-[#F8F4E9] hover:text-[#785B1F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E]"
-          >
+      <div className="flex min-w-0 flex-col gap-3 py-4">
+        {/* Sermon information and playback controls */}
+        <div className="flex w-full min-w-0 items-center gap-3 sm:gap-5">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#F8F4E9] text-[#785B1F] sm:size-12">
             <svg
               aria-hidden="true"
-              viewBox="0 0 20 20"
+              viewBox="0 0 24 24"
               fill="none"
-              className="size-5"
+              className="size-5 sm:size-6"
             >
               <path
-                d="M10 2.75v9.5m0 0 3.5-3.5M10 12.25l-3.5-3.5M3.5 13.5v2A1.75 1.75 0 0 0 5.25 17.25h9.5A1.75 1.75 0 0 0 16.5 15.5v-2"
+                d="M9 18V5l12-2v13M9 18c0 1.1-1.34 2-3 2s-3-.9-3-2 1.34-2 3-2 3 .9 3 2Zm12-2c0 1.1-1.34 2-3 2s-3-.9-3-2 1.34-2 3-2 3 .9 3 2ZM9 9l12-2"
                 stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
-          </a>
-        )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="break-words text-sm font-semibold leading-6 text-[#101B33] sm:text-base">
+              {sermon.title}
+            </h3>
+
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#667085] sm:text-sm">
+              <span>
+                {sermon.preacher || "Preacher not provided"}
+              </span>
+
+              {sermon.category && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{sermon.category}</span>
+                </>
+              )}
+
+              {sermon.date && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{sermon.date}</span>
+                </>
+              )}
+            </div>
+
+            {duration && (
+              <p className="mt-1 text-xs tabular-nums text-[#667085] sm:hidden">
+                {duration}
+              </p>
+            )}
+          </div>
+
+          <span className="hidden shrink-0 text-sm tabular-nums text-[#667085] sm:inline">
+            {duration || "—"}
+          </span>
+
+          <SermonPlayButton sermon={sermon} />
+
+          <ListenLaterButton
+            sermonId={sermon.id}
+            sermonTitle={sermon.title}
+          />
+        </div>
+
+        {/* Download actions */}
+        <div className="grid grid-cols-2 gap-2 pl-0 sm:gap-3">
+          {sermon.mediaType === "audio" && (
+            <SermonOfflineDownloadButton
+              sermonId={sermon.id}
+              sermonTitle={sermon.title}
+            />
+          )}
+
+          {sermon.downloadAllowed && (
+            <a
+              href={`/api/sermons/${encodeURIComponent(sermon.id)}/audio?download=1`}
+              aria-label={`Download ${sermon.title}`}
+              title="Download audio"
+              className="flex min-w-0 items-center justify-center gap-2 rounded-xl border border-[#E4E7EC] px-2 py-3 text-[#344054] transition hover:border-[#D9B66D] hover:bg-[#F8F4E9] hover:text-[#785B1F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9A772E] sm:px-3"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="size-5 shrink-0"
+              >
+                <path
+                  d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+
+              <span className="min-w-0 text-left">
+                <span className="block text-xs font-semibold sm:text-sm">
+                  Download audio
+                </span>
+                <span className="hidden text-[11px] text-[#667085] sm:block">
+                  Save to your device
+                </span>
+              </span>
+            </a>
+          )}
+        </div>
       </div>
     </article>
   );

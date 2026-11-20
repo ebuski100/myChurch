@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Sermon } from "@/lib/sermons";
+import { getOfflineAudioBlob } from "@/lib/offline-audio-downloads";
 import { Spinner } from "@/components/ui/button";
 
 type PlayerStatus =
@@ -118,6 +119,7 @@ export function AudioPlayerProvider({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const activeResourceIdRef = useRef<string | null>(null);
   const requestIdRef = useRef(0);
+  const blobUrlRef = useRef<string | null>(null);
 
   const [currentSermon, setCurrentSermon] = useState<Sermon | null>(
     null,
@@ -126,66 +128,133 @@ export function AudioPlayerProvider({
   const [errorMessage, setErrorMessage] = useState<string | null>(
     null,
   );
+  const [playbackInfo, setPlaybackInfo] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const playSermon = useCallback(async (sermon: Sermon) => {
-    const audio = audioRef.current;
+  const currentSermonRef = useRef<Sermon | null>(null);
 
-    if (!audio) {
-      setErrorMessage(
-        "The audio player is not ready. Please try again.",
-      );
-      setStatus("error");
-      return;
-    }
-
-    const requestId = ++requestIdRef.current;
-    const isNewSermon = activeResourceIdRef.current !== sermon.id;
-
-    setCurrentSermon(sermon);
-    setErrorMessage(null);
-
-    if (isNewSermon) {
-      activeResourceIdRef.current = sermon.id;
-      setCurrentTime(0);
-      setDuration(0);
-      setStatus("loading");
-
-      audio.pause();
-      audio.src = `/api/sermons/${encodeURIComponent(sermon.id)}/audio`;
-      audio.load();
-    } else if (audio.error) {
-      setStatus("loading");
-      audio.load();
-    } else if (!audio.paused && !audio.ended) {
-      setStatus("playing");
-      return;
-    }
-
-    setStatus("loading");
-
-    try {
-      await audio.play();
-
-      if (requestId !== requestIdRef.current) return;
-
-      setErrorMessage(null);
-      setStatus(audio.paused ? "paused" : "playing");
-    } catch {
-      if (requestId !== requestIdRef.current) return;
-
-      setStatus("error");
-      setErrorMessage(
-        "This recording could not start. Check your connection and try again.",
-      );
+  const revokeBlobUrl = useCallback(() => {
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
     }
   }, []);
 
+  const setSourceToOffline = useCallback(
+    async (sermon: Sermon, requestId: number) => {
+      const audio = audioRef.current;
+      if (!audio || requestId !== requestIdRef.current) return false;
+
+      const blob = await getOfflineAudioBlob(sermon.id);
+      if (requestId !== requestIdRef.current) return false;
+      if (!blob) return false;
+
+      audio.pause();
+      revokeBlobUrl();
+      const url = URL.createObjectURL(blob);
+      if (requestId !== requestIdRef.current) {
+        URL.revokeObjectURL(url);
+        return false;
+      }
+      blobUrlRef.current = url;
+      audio.src = url;
+      audio.load();
+      setPlaybackInfo("Playing saved offline copy");
+      return true;
+    },
+    [revokeBlobUrl],
+  );
+
+  const playSermon = useCallback(
+    async (sermon: Sermon) => {
+      const audio = audioRef.current;
+
+      if (!audio) {
+        setErrorMessage("The audio player is not ready. Please try again.");
+        setStatus("error");
+        return;
+      }
+
+      const requestId = ++requestIdRef.current;
+      const isNewSermon = activeResourceIdRef.current !== sermon.id;
+
+      setCurrentSermon(sermon);
+      currentSermonRef.current = sermon;
+      setErrorMessage(null);
+      setPlaybackInfo(null);
+
+      if (isNewSermon) {
+        activeResourceIdRef.current = sermon.id;
+        setCurrentTime(0);
+        setDuration(0);
+        setStatus("loading");
+
+        audio.pause();
+        revokeBlobUrl();
+
+        const offline =
+          typeof navigator !== "undefined" && navigator.onLine === false;
+
+        if (offline) {
+          const ok = await setSourceToOffline(sermon, requestId);
+          if (requestId !== requestIdRef.current) return;
+          if (!ok) {
+            setStatus("error");
+            setErrorMessage("This sermon is not available offline.");
+            return;
+          }
+        } else {
+          audio.src = `/api/sermons/${encodeURIComponent(sermon.id)}/audio`;
+          audio.load();
+        }
+      } else if (audio.error) {
+        setStatus("loading");
+        audio.load();
+      } else if (!audio.paused && !audio.ended) {
+        setStatus("playing");
+        return;
+      }
+
+      setStatus("loading");
+
+      try {
+        await audio.play();
+        if (requestId !== requestIdRef.current) return;
+        setErrorMessage(null);
+        setStatus(audio.paused ? "paused" : "playing");
+      } catch {
+        if (requestId !== requestIdRef.current) return;
+        const ok = await setSourceToOffline(sermon, requestId);
+        if (requestId !== requestIdRef.current) return;
+        if (ok) {
+          try {
+            await audio.play();
+            if (requestId !== requestIdRef.current) return;
+            setErrorMessage(null);
+            setStatus("playing");
+            return;
+          } catch {
+            if (requestId !== requestIdRef.current) return;
+          }
+        }
+        setStatus("error");
+        setPlaybackInfo(null);
+        setErrorMessage(
+          typeof navigator !== "undefined" && navigator.onLine === false
+            ? "This sermon is not available offline."
+            : "This recording could not start. Check your connection and try again.",
+        );
+      }
+    },
+    [revokeBlobUrl, setSourceToOffline],
+  );
+
   const togglePlayback = useCallback(async () => {
     const audio = audioRef.current;
+    const sermon = currentSermonRef.current;
 
-    if (!audio || !currentSermon) return;
+    if (!audio || !sermon) return;
 
     if (!audio.paused && !audio.ended) {
       audio.pause();
@@ -203,20 +272,33 @@ export function AudioPlayerProvider({
 
     try {
       await audio.play();
-
       if (requestId !== requestIdRef.current) return;
-
       setErrorMessage(null);
       setStatus(audio.paused ? "paused" : "playing");
     } catch {
       if (requestId !== requestIdRef.current) return;
-
+      const ok = await setSourceToOffline(sermon, requestId);
+      if (requestId !== requestIdRef.current) return;
+      if (ok) {
+        try {
+          await audio.play();
+          if (requestId !== requestIdRef.current) return;
+          setErrorMessage(null);
+          setStatus("playing");
+          return;
+        } catch {
+          if (requestId !== requestIdRef.current) return;
+        }
+      }
       setStatus("error");
+      setPlaybackInfo(null);
       setErrorMessage(
-        "This recording could not start. Check your connection and try again.",
+        typeof navigator !== "undefined" && navigator.onLine === false
+          ? "This sermon is not available offline."
+          : "This recording could not start. Check your connection and try again.",
       );
     }
-  }, [currentSermon]);
+  }, [setSourceToOffline]);
 
   const seekTo = useCallback((value: string) => {
     const audio = audioRef.current;
@@ -230,10 +312,7 @@ export function AudioPlayerProvider({
       return;
     }
 
-    audio.currentTime = Math.max(
-      0,
-      Math.min(nextTime, audio.duration),
-    );
+    audio.currentTime = Math.max(0, Math.min(nextTime, audio.duration));
     setCurrentTime(audio.currentTime);
   }, []);
 
@@ -248,13 +327,16 @@ export function AudioPlayerProvider({
       audio.load();
     }
 
+    revokeBlobUrl();
     activeResourceIdRef.current = null;
+    currentSermonRef.current = null;
     setCurrentSermon(null);
     setStatus("idle");
     setErrorMessage(null);
+    setPlaybackInfo(null);
     setCurrentTime(0);
     setDuration(0);
-  }, []);
+  }, [revokeBlobUrl]);
 
   const isPlaying = status === "playing";
   const isLoading = status === "loading";
@@ -432,11 +514,11 @@ export function AudioPlayerProvider({
                   >
                     {errorMessage ??
                       (isLoading
-                        ? "Getting the message ready…"
+                        ? playbackInfo ?? "Getting the message ready…"
                         : isPlaying
-                          ? "Take a moment and listen."
+                          ? playbackInfo ?? "Take a moment and listen."
                           : status === "paused"
-                            ? "Paused · Resume whenever you're ready."
+                            ? playbackInfo ?? "Paused · Resume whenever you're ready."
                             : status === "error"
                               ? "Playback could not start."
                               : "Choose a message and listen anywhere.")}
@@ -517,12 +599,44 @@ export function AudioPlayerProvider({
             setStatus("paused");
           }}
           onError={() => {
-            if (!currentSermon) return;
+            const sermon = currentSermonRef.current;
+            const audio = audioRef.current;
+            if (!sermon || !audio) return;
 
-            setStatus("error");
-            setErrorMessage(
-              "This recording is unavailable right now. Please try again later.",
-            );
+            // If the offline blob itself failed, don't loop.
+            if (blobUrlRef.current && audio.src === blobUrlRef.current) {
+              setPlaybackInfo(null);
+              setStatus("error");
+              setErrorMessage("Saved offline audio could not be played.");
+              return;
+            }
+
+            const requestId = requestIdRef.current;
+            void (async () => {
+              const ok = await setSourceToOffline(sermon, requestId);
+              if (!ok || requestId !== requestIdRef.current) {
+                if (requestId !== requestIdRef.current) return;
+                setPlaybackInfo(null);
+                setStatus("error");
+                setErrorMessage(
+                  typeof navigator !== "undefined" && navigator.onLine === false
+                    ? "This sermon is not available offline."
+                    : "This recording is unavailable right now. Please try again later.",
+                );
+                return;
+              }
+              try {
+                await audio.play();
+                if (requestId !== requestIdRef.current) return;
+                setErrorMessage(null);
+                setStatus(audio.paused ? "paused" : "playing");
+              } catch {
+                if (requestId !== requestIdRef.current) return;
+                setPlaybackInfo(null);
+                setStatus("error");
+                setErrorMessage("Saved offline audio could not be played.");
+              }
+            })();
           }}
         >
           Your browser does not support audio playback.

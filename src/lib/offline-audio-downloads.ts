@@ -216,3 +216,21 @@ export async function requestPersistentStorage(): Promise<void> {
     // ignore
   }
 }
+
+export async function getOfflineAudioBlob(id: string): Promise<Blob | null> {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const res = await cache.match(syntheticKey(id));
+    if (!res || !res.ok) return null;
+
+    const blob = await res.blob();
+    if (!blob || blob.size === 0) return null;
+
+    const type = (blob.type || res.headers.get("content-type") || "").toLowerCase();
+    if (type && !type.startsWith("audio/")) return null;
+
+    return blob;
+  } catch {
+    return null;
+  }
+}
