@@ -1154,7 +1154,7 @@ export function AudioPlayerProvider({
       <div
         className={
           currentSermon
-            ? "flex min-h-full flex-col pb-35 "
+            ? "flex min-h-full flex-col pb-39 "
             : "flex min-h-full flex-col"
         }
       >
